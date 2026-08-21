@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { DAYS, EXERCISES, CYCLE, yt, restLabel } from '../data/program'
+import { DAYS, EXERCISES, CYCLE, FOCUS_LOOKUP, yt, restLabel } from '../data/program'
 import { exportJson, findOrCreateGist, pullGist, saveLocal } from '../lib/storage'
 import { fmtDate, dayLabel } from '../lib/calc'
 
@@ -42,6 +42,10 @@ function ProgramCard({ state }) {
                 <td className="num">{restLabel(ex.rest)}</td>
               </tr>
             )
+          })}
+          {Object.values(state.prefs?.focus || {}).flatMap((f) => f.exercises).filter((id) => FOCUS_LOOKUP[id]?.day === open).map((id) => {
+            const ex = FOCUS_LOOKUP[id]
+            return <tr key={id}><td><a href={yt(ex.name)} target="_blank" rel="noreferrer">{ex.name}</a><div className="tiny teal">focus block</div></td><td className="small muted">{ex.muscles}</td><td className="num">{ex.sets} x {ex.reps}</td><td className="num">{restLabel(ex.rest)}</td></tr>
           })}
         </tbody>
       </table>

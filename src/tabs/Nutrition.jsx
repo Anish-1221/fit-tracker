@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts'
 import { ACTIVITY, navyBodyFat, ftInToCm, todayKey, fmtDate, weeklyAverages, weekKey, addDays } from '../lib/calc'
+import Physique from '../components/Physique'
 
 const METRICS = {
   weight: { label: 'Weight (kg)', color: '#F2A93B' },
@@ -19,6 +20,7 @@ export default function Nutrition({ state, update, targets, showToast }) {
       <DailyLog state={state} update={update} targets={targets} />
       <Measurements state={state} update={update} showToast={showToast} />
       <Trends state={state} targets={targets} />
+      <Physique state={state} update={update} showToast={showToast} />
     </>
   )
 }
@@ -41,7 +43,7 @@ function ProfileForm({ state, update, onDone }) {
   const save = () => {
     update((s) => ({
       ...s,
-      profile: { ...f, age: +f.age, weightKg: +f.weightKg, ft: +f.ft, inch: +f.inch, heightCm, neckCm: +f.neckCm, waistCm: +f.waistCm, hipCm: +f.hipCm, goalBodyFat: +f.goalBodyFat, bodyFat: +bf.toFixed(1), updated: todayKey() },
+      profile: { ...(s.profile || {}), ...f, age: +f.age, weightKg: +f.weightKg, ft: +f.ft, inch: +f.inch, heightCm, neckCm: +f.neckCm, waistCm: +f.waistCm, hipCm: +f.hipCm, goalBodyFat: +f.goalBodyFat, bodyFat: +bf.toFixed(1), updated: todayKey() },
       measurements: { ...s.measurements, [todayKey()]: { ...(s.measurements?.[todayKey()] || {}), neck: +f.neckCm, waist: +f.waistCm, hip: +f.hipCm || undefined, bodyfat: +bf.toFixed(1), weight: +f.weightKg } },
     }))
     onDone()
@@ -143,7 +145,7 @@ function Measurements({ state, update, showToast }) {
   const wk = weekKey(todayKey())
   const existing = Object.keys(state.measurements || {}).filter((k) => weekKey(k) === wk).sort().pop()
   const m = existing ? state.measurements[existing] : {}
-  const [f, setF] = useState({ neck: m.neck || '', waist: m.waist || '', hip: m.hip || '', chest: m.chest || '', arm: m.arm || '', thigh: m.thigh || '' })
+  const [f, setF] = useState({ neck: m.neck || '', waist: m.waist || '', hip: m.hip || '' })
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const bf = navyBodyFat({ sex: p.sex, heightCm: p.heightCm, neckCm: +f.neck, waistCm: +f.waist, hipCm: +f.hip })
   const save = () => {
@@ -151,17 +153,17 @@ function Measurements({ state, update, showToast }) {
     const weight = state.daily?.[todayKey()]?.weight || p.weightKg
     update((s) => ({
       ...s,
-      measurements: { ...s.measurements, [key]: { neck: +f.neck || undefined, waist: +f.waist || undefined, hip: +f.hip || undefined, chest: +f.chest || undefined, arm: +f.arm || undefined, thigh: +f.thigh || undefined, bodyfat: bf != null ? +bf.toFixed(1) : undefined, weight: +weight } },
+      measurements: { ...s.measurements, [key]: { ...(s.measurements?.[key] || {}), neck: +f.neck || undefined, waist: +f.waist || undefined, hip: +f.hip || undefined, bodyfat: bf != null ? +bf.toFixed(1) : undefined, weight: +weight } },
       profile: bf != null ? { ...s.profile, bodyFat: +bf.toFixed(1), neckCm: +f.neck, waistCm: +f.waist, hipCm: +f.hip || s.profile.hipCm } : s.profile,
     }))
     showToast('Measurements saved, targets updated')
   }
-  const rows = Object.entries(state.measurements || {}).sort().reverse().slice(0, 8)
+  const rows = Object.entries(state.measurements || {}).filter(([, v]) => v.bodyfat).sort().reverse().slice(0, 8)
   return (
     <section className="card">
-      <div className="card-head"><h2>Weekly measurements</h2><span className={'chip ' + (existing ? 'teal' : '')}>{existing ? 'done this week' : 'due this week'}</span></div>
+      <div className="card-head"><h2>Weekly body fat check</h2><span className={'chip ' + (existing ? 'teal' : '')}>{existing ? 'done this week' : 'due this week'}</span></div>
       <div className="grid grid-3">
-        {['neck', 'waist', 'hip', 'chest', 'arm', 'thigh'].map((k) => (
+        {['neck', 'waist', 'hip'].map((k) => (
           <div className="field" key={k}><label style={{ textTransform: 'capitalize' }}>{k} (cm)</label><input className="input mono" type="number" step="0.1" value={f[k]} onChange={set(k)} /></div>
         ))}
       </div>
@@ -172,8 +174,8 @@ function Measurements({ state, update, showToast }) {
       {rows.length > 0 && (
         <div style={{ marginTop: 14, overflowX: 'auto' }}>
           <table>
-            <thead><tr><th>Date</th><th className="num">Weight</th><th className="num">BF%</th><th className="num">Waist</th><th className="num">Chest</th><th className="num">Arm</th><th className="num">Thigh</th></tr></thead>
-            <tbody>{rows.map(([k, v]) => <tr key={k}><td>{fmtDate(k)}</td><td className="num">{v.weight ?? '-'}</td><td className="num">{v.bodyfat ?? '-'}</td><td className="num">{v.waist ?? '-'}</td><td className="num">{v.chest ?? '-'}</td><td className="num">{v.arm ?? '-'}</td><td className="num">{v.thigh ?? '-'}</td></tr>)}</tbody>
+            <thead><tr><th>Date</th><th className="num">Weight</th><th className="num">BF%</th><th className="num">Neck</th><th className="num">Waist</th><th className="num">Hip</th></tr></thead>
+            <tbody>{rows.map(([k, v]) => <tr key={k}><td>{fmtDate(k)}</td><td className="num">{v.weight ?? '-'}</td><td className="num">{v.bodyfat ?? '-'}</td><td className="num">{v.neck ?? '-'}</td><td className="num">{v.waist ?? '-'}</td><td className="num">{v.hip ?? '-'}</td></tr>)}</tbody>
           </table>
         </div>
       )}

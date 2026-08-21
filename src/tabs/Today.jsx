@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { DAYS, EXERCISES, ALT_LOOKUP, CYCLE, CARDIO_TYPES, yt, restLabel } from '../data/program'
+import { DAYS, EXERCISES, ALT_LOOKUP, CYCLE, CARDIO_TYPES, FOCUS_LOOKUP, yt, restLabel } from '../data/program'
 import { todayKey, addDays, fmtDate, buildSchedule, e1rm, dayLabel } from '../lib/calc'
 
 // ---------- helpers ----------
@@ -13,13 +13,21 @@ function lastSession(state, beforeKey, slotId, altId) {
   return null
 }
 
+// Base exercises for a day plus any active focus-block exercises.
+export function dayExercises(slot, state) {
+  const base = DAYS[slot].exercises
+  const extras = Object.values(state.prefs?.focus || {}).flatMap((f) => f.exercises).filter((id) => FOCUS_LOOKUP[id]?.day === slot)
+  return [...base, ...extras]
+}
+const exDef = (id) => EXERCISES[id] || FOCUS_LOOKUP[id]
+
 function emptyDraft(slot, state, dateKey) {
   const day = DAYS[slot]
   return {
     day: slot,
-    exercises: day.exercises.map((id) => {
+    exercises: dayExercises(slot, state).map((id) => {
       const alt = state.prefs?.defaultAlts?.[id] || id
-      const ex = EXERCISES[id]
+      const ex = exDef(id)
       const prev = lastSession(state, dateKey, id, alt)
       return {
         slot: id, alt,
@@ -146,7 +154,7 @@ export default function Today({ state, update, schedule, targets, showToast }) {
             <p className="muted small" style={{ marginTop: 6 }}>
               {info?.status === 'done' && 'Logged. Nice work.'}
               {info?.status === 'missed' && 'This session was missed. It stays here until you log it or skip it.'}
-              {info?.status === 'planned' && day?.kind === 'lift' && `${day.exercises.length} exercises, ${day.exercises.reduce((a, id) => a + EXERCISES[id].sets, 0)} working sets.`}
+              {info?.status === 'planned' && day?.kind === 'lift' && `${dayExercises(slot, state).length} exercises, ${dayExercises(slot, state).reduce((a, id) => a + exDef(id).sets, 0)} working sets.`}
               {info?.status === 'planned' && day?.kind === 'abs' && `Short core session plus cardio. Aim for ${stepGoal.toLocaleString()} steps today.`}
               {info?.status === 'rest' && 'Rest day. Walk, stretch, eat your protein. Muscles grow on these days.'}
               {info?.status === 'skipped' && 'Skipped. The cycle moved on.'}
@@ -205,7 +213,9 @@ export default function Today({ state, update, schedule, targets, showToast }) {
             </div>
           </div>
           {draft.exercises.map((e, i) => {
-            const ex = EXERCISES[e.slot]
+            const ex = exDef(e.slot)
+            if (!ex) return null
+            const isFocus = !!FOCUS_LOOKUP[e.slot]
             const alt = ALT_LOOKUP[e.alt] || { name: ex.name, muscles: ex.muscles }
             const prev = lastSession(state, dateKey, e.slot, e.alt)
             const complete = e.sets.every((s) => s.reps)
@@ -222,6 +232,7 @@ export default function Today({ state, update, schedule, targets, showToast }) {
                       </div>
                     </div>
                     <div className="ex-meta">
+                      {isFocus && <span className="chip teal">focus</span>}
                       <span className="chip accent mono">{ex.sets} x {ex.reps}</span>
                       <span className="chip">rest {restLabel(ex.rest)}</span>
                       <a className="chip" href={yt(alt.name)} target="_blank" rel="noreferrer">Form video</a>
@@ -325,7 +336,7 @@ function Progress({ state }) {
     Object.entries(state.workouts || {}).forEach(([d, w]) => (w.exercises || []).forEach((e) => {
       if (e.sets?.some((s) => s.reps)) { const k = e.alt || e.slot; seen.set(k, (seen.get(k) || 0) + 1) }
     }))
-    return [...seen.keys()].map((k) => ({ id: k, name: ALT_LOOKUP[k]?.name || EXERCISES[k]?.name || k }))
+    return [...seen.keys()].map((k) => ({ id: k, name: ALT_LOOKUP[k]?.name || EXERCISES[k]?.name || FOCUS_LOOKUP[k]?.name || k }))
   }, [state.workouts])
   const [sel, setSel] = useState('')
   const [metric, setMetric] = useState('top')

@@ -219,3 +219,90 @@ export function streak(state, schedule, targets) {
   }
   return n
 }
+
+// ---------- physique analysis ----------
+// Reference proportions (Reeves, "Building the Classic Physique"): arm 2.52x
+// wrist, calf 1.92x ankle, thigh 1.75x knee; neck, arm and calf roughly equal.
+// Chest 6.5x wrist and forearm ~0.80x arm (McCallum, relaxed chest at the
+// nipple line). Shoulders 1.618x waist (golden ratio). These are aesthetic conventions, used only to rank which
+// group is furthest behind, never as absolute targets.
+export const TAPE_NOISE = 1.0 // cm, minimal detectable change for a tape
+export const FOCUS_MIN_WEEKS = 8
+export const FOCUS_MIN_READINGS = 3
+
+const avgLR = (m, a, b) => (m[a] && m[b] ? (m[a] + m[b]) / 2 : m[a] || m[b] || null)
+
+export function physiqueTargets(bones, m) {
+  const t = {}
+  if (bones?.wrist) t.arms = 2.52 * bones.wrist
+  if (bones?.ankle) t.calves = 1.92 * bones.ankle
+  if (bones?.knee) t.thighs = 1.75 * bones.knee
+  if (bones?.wrist) t.chest = 6.5 * bones.wrist
+  if (m?.waist) t.shoulders = 1.618 * m.waist
+  if (t.arms) { t.neck = t.arms; t.forearms = 0.8 * t.arms }
+  return t
+}
+
+export function physiqueReadings(measurements) {
+  return Object.entries(measurements || {})
+    .filter(([, v]) => v.physique)
+    .sort()
+    .map(([k, v]) => ({ date: k, ...v.physique, neck: v.neck, waist: v.waist, hip: v.hip }))
+}
+
+export function groupValue(r, g) {
+  switch (g) {
+    case 'arms': return avgLR(r, 'armL', 'armR')
+    case 'forearms': return avgLR(r, 'forearmL', 'forearmR')
+    case 'thighs': return avgLR(r, 'thighL', 'thighR')
+    case 'calves': return avgLR(r, 'calfL', 'calfR')
+    default: return r[g] || null
+  }
+}
+
+export function analyzePhysique(state, groupsDef) {
+  const readings = physiqueReadings(state.measurements)
+  const bones = state.profile?.bones
+  if (!readings.length) return null
+  const latest = readings[readings.length - 1]
+  const targets = physiqueTargets(bones, latest)
+  const rows = Object.keys(groupsDef).map((g) => {
+    const value = groupValue(latest, g)
+    const target = targets[g]
+    const pct = value && target ? (value / target) * 100 : null
+    // trend over the last >= 8 weeks with >= 3 readings
+    const cutoff = addDays(latest.date, -7 * FOCUS_MIN_WEEKS)
+    const window = readings.filter((r) => groupValue(r, g) != null)
+    const baseline = window.find((r) => r.date <= cutoff) || null
+    const enough = baseline && window.filter((r) => r.date >= baseline.date).length >= FOCUS_MIN_READINGS
+    const change = enough && value != null ? value - groupValue(baseline, g) : null
+    const sites = groupsDef[g].sites
+    const asym = sites.length === 2 && latest[sites[0]] && latest[sites[1]] ? latest[sites[0]] - latest[sites[1]] : null
+    return { group: g, label: groupsDef[g].label, value, target, pct, change, enough, asym, weeks: baseline ? Math.round(diffDays(baseline.date, latest.date) / 7) : 0 }
+  })
+  const withPct = rows.filter((r) => r.pct != null)
+  const median = withPct.length ? [...withPct].sort((a, b) => a.pct - b.pct)[Math.floor(withPct.length / 2)].pct : null
+  const flags = []
+  rows.forEach((r) => {
+    // lagging: clearly behind the rest of the physique relative to its reference
+    if (r.pct != null && median != null && median - r.pct >= 5) flags.push({ group: r.group, kind: 'lagging', detail: `${r.pct.toFixed(0)}% of reference vs ${median.toFixed(0)}% median` })
+    // stalled: enough data, and no change beyond tape noise while others grew
+    if (r.enough && r.change != null && r.change < TAPE_NOISE * 0.5) {
+      const othersGrew = rows.some((o) => o.group !== r.group && o.enough && o.change != null && o.change >= TAPE_NOISE)
+      if (othersGrew) flags.push({ group: r.group, kind: 'stalled', detail: `${r.change >= 0 ? '+' : ''}${r.change.toFixed(1)} cm in ${r.weeks} weeks while other groups grew` })
+    }
+    if (r.asym != null && Math.abs(r.asym) > TAPE_NOISE) flags.push({ group: r.group, kind: 'asymmetry', detail: `${r.asym > 0 ? 'left' : 'right'} side is ${Math.abs(r.asym).toFixed(1)} cm bigger` })
+  })
+  // Priority score per group: how far behind (points below median) plus a
+  // bonus for a confirmed stall. Asymmetry alone does not earn a focus block
+  // (it is fixed with unilateral work, not more volume). Max two focus groups.
+  const score = {}
+  rows.forEach((r) => {
+    let sc = 0
+    if (r.pct != null && median != null && median - r.pct >= 5) sc += median - r.pct
+    if (flags.some((f) => f.group === r.group && f.kind === 'stalled')) sc += 6
+    if (sc > 0) score[r.group] = sc
+  })
+  const focus = Object.keys(score).sort((a, b) => score[b] - score[a]).slice(0, 2)
+  return { readings, latest, rows, flags, focus, median, bones }
+}

@@ -407,3 +407,71 @@ export const CYCLE = ['upper1', 'lower1', 'rest', 'upper2', 'lower2', 'abs', 're
 export const CARDIO_TYPES = ['Walk', 'Incline walk', 'Run', 'Cycling', 'Swimming', 'Badminton', 'Table tennis', 'Other']
 
 export const restLabel = (s) => (s >= 60 ? `${Math.round(s / 60)} min` : `${s} s`)
+
+// ---------- physique tracking (optional) ----------
+// Muscle groups that can be measured with a tape and which program days train
+// them. "weeklySets" is a rough count in the base program, used to show how
+// much volume a focus block adds (Schoenfeld 2017: ~10+ weekly sets is where
+// gains get close to maximal, each set adds ~0.37%).
+export const MUSCLE_GROUPS = {
+  arms: { label: 'Upper arms', sites: ['armL', 'armR'], days: ['upper1', 'upper2'], weeklySets: 6 },
+  forearms: { label: 'Forearms', sites: ['forearmL', 'forearmR'], days: ['upper1', 'upper2'], weeklySets: 0 },
+  shoulders: { label: 'Shoulders', sites: ['shoulders'], days: ['upper1', 'upper2'], weeklySets: 8 },
+  chest: { label: 'Chest', sites: ['chest'], days: ['upper1', 'upper2'], weeklySets: 6 },
+  neck: { label: 'Neck', sites: ['neck'], days: ['upper1', 'upper2'], weeklySets: 0 },
+  thighs: { label: 'Thighs', sites: ['thighL', 'thighR'], days: ['lower1', 'lower2'], weeklySets: 12 },
+  calves: { label: 'Calves', sites: ['calfL', 'calfR'], days: ['lower1', 'lower2'], weeklySets: 6 },
+}
+
+export const PHYSIQUE_SITES = {
+  shoulders: 'Shoulders (around deltoids, arms relaxed)',
+  chest: 'Chest (nipple line, relaxed, after exhale)',
+  armL: 'Left upper arm (flexed, peak)',
+  armR: 'Right upper arm (flexed, peak)',
+  forearmL: 'Left forearm (widest, fist closed)',
+  forearmR: 'Right forearm (widest, fist closed)',
+  thighL: 'Left thigh (mid, relaxed)',
+  thighR: 'Right thigh (mid, relaxed)',
+  calfL: 'Left calf (widest, relaxed)',
+  calfR: 'Right calf (widest, relaxed)',
+}
+export const BONE_SITES = {
+  wrist: 'Wrist (narrowest, above the bone)',
+  ankle: 'Ankle (narrowest, above the bone)',
+  knee: 'Knee (around the kneecap, leg straight)',
+}
+
+// Focus exercises: one added to a session when a group is lagging. Kept to
+// 2-3 sets so the extra volume is modest and recovery holds.
+export const FOCUS = {
+  arms: [
+    { id: 'f_incline_curl', name: 'Incline dumbbell curl', muscles: 'Biceps (long head)', pattern: 'Elbow flexion', sets: 3, reps: '10-15', rest: 90, day: 'upper1' },
+    { id: 'f_overhead_ext', name: 'Overhead dumbbell extension', muscles: 'Triceps (long head)', pattern: 'Elbow extension', sets: 3, reps: '10-15', rest: 90, day: 'upper2' },
+  ],
+  forearms: [
+    { id: 'f_wrist_curl', name: 'Dumbbell wrist curl', muscles: 'Forearm flexors', pattern: 'Wrist flexion', sets: 3, reps: '12-20', rest: 60, day: 'upper1' },
+    { id: 'f_hammer_curl', name: 'Hammer curl', muscles: 'Brachialis, brachioradialis', pattern: 'Elbow flexion', sets: 3, reps: '10-15', rest: 90, day: 'upper2' },
+  ],
+  shoulders: [
+    { id: 'f_lateral', name: 'Cable or dumbbell lateral raise', muscles: 'Side delts', pattern: 'Shoulder abduction', sets: 3, reps: '12-20', rest: 60, day: 'upper1' },
+    { id: 'f_rear_delt', name: 'Rear delt fly (machine or dumbbell)', muscles: 'Rear delts', pattern: 'Horizontal abduction', sets: 3, reps: '12-20', rest: 60, day: 'upper2' },
+  ],
+  chest: [
+    { id: 'f_pec_fly', name: 'Pec deck or cable fly', muscles: 'Chest', pattern: 'Horizontal adduction', sets: 3, reps: '10-15', rest: 90, day: 'upper1' },
+    { id: 'f_incline_press', name: 'Incline machine press', muscles: 'Upper chest', pattern: 'Incline press', sets: 2, reps: '8-12', rest: 120, day: 'upper2' },
+  ],
+  neck: [
+    { id: 'f_shrug', name: 'Dumbbell shrug', muscles: 'Upper traps', pattern: 'Scapular elevation', sets: 3, reps: '10-15', rest: 90, day: 'upper2' },
+    { id: 'f_neck_curl', name: 'Neck curl (plate or band)', muscles: 'Neck flexors', pattern: 'Neck flexion', sets: 2, reps: '12-20', rest: 60, day: 'upper1' },
+  ],
+  thighs: [
+    { id: 'f_leg_ext', name: 'Leg extension', muscles: 'Quads', pattern: 'Knee extension', sets: 3, reps: '12-15', rest: 90, day: 'lower1' },
+    { id: 'f_leg_curl', name: 'Leg curl', muscles: 'Hamstrings', pattern: 'Knee flexion', sets: 3, reps: '12-15', rest: 90, day: 'lower2' },
+  ],
+  calves: [
+    { id: 'f_seated_calf', name: 'Seated calf raise', muscles: 'Calves (soleus)', pattern: 'Plantar flexion', sets: 3, reps: '12-20', rest: 60, day: 'lower1' },
+    { id: 'f_standing_calf', name: 'Standing calf raise (machine or dumbbell)', muscles: 'Calves (gastrocnemius)', pattern: 'Plantar flexion', sets: 3, reps: '10-15', rest: 60, day: 'lower2' },
+  ],
+}
+export const FOCUS_LOOKUP = {}
+Object.values(FOCUS).forEach((arr) => arr.forEach((f) => { FOCUS_LOOKUP[f.id] = { ...f, alternatives: [{ id: f.id, name: f.name, muscles: f.muscles }] } }))
