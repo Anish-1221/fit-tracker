@@ -5,11 +5,13 @@ import Today from './tabs/Today'
 import Nutrition from './tabs/Nutrition'
 import Calendar from './tabs/Calendar'
 import Plan from './tabs/Plan'
+import Hair from './tabs/Hair'
 
 const TABS = [
   { key: 'today', label: 'Workout' },
   { key: 'nutrition', label: 'Nutrition' },
   { key: 'calendar', label: 'Streak' },
+  { key: 'hair', label: 'Hair' },
   { key: 'plan', label: 'Plan' },
 ]
 
@@ -109,6 +111,7 @@ export default function App() {
       {tab === 'today' && <Today {...ctx} />}
       {tab === 'nutrition' && <Nutrition {...ctx} />}
       {tab === 'calendar' && <Calendar {...ctx} />}
+      {tab === 'hair' && <Hair {...ctx} />}
       {tab === 'plan' && <Plan {...ctx} />}
 
       <nav className="tabs">

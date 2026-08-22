@@ -197,6 +197,16 @@ export function dayScore(state, dateKey, schedule, targets) {
     if (daily.steps) checks.push({ key: 'steps', ok: +daily.steps >= stepGoal })
     else checks.push({ key: 'steps', ok: false, empty: true })
   }
+  const hair = state.hair
+  if (hair?.startDate && hair.inStreak && dateKey >= hair.startDate) {
+    const enabled = Object.keys(hair.habits || {}).filter((k) => hair.habits[k])
+    if (enabled.length) {
+      const log = hair.log?.[dateKey] || {}
+      const proteinOk = targets && daily.protein ? +daily.protein >= targets.protein : null
+      const doneN = enabled.filter((k) => (k === 'protein' && proteinOk != null ? proteinOk : log[k])).length
+      checks.push({ key: 'hair', ok: doneN === enabled.length, empty: doneN === 0 })
+    }
+  }
   const hits = checks.filter((c) => c.ok).length
   const logged = checks.some((c) => !c.empty) || !!state.workouts?.[dateKey]
   let level = 0

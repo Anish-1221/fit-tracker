@@ -1,6 +1,6 @@
 # Fit Tracker
 
-A personal workout, nutrition, body composition and physique tracker. Single user, no login, runs entirely in the browser, hosted on GitHub Pages at https://Anish-1221.github.io/fit-tracker/
+A personal workout, nutrition, body composition, physique and hair routine tracker. Single user, no login, runs entirely in the browser, hosted on GitHub Pages at https://Anish-1221.github.io/fit-tracker/
 
 Data is stored in the browser (localStorage) and optionally synced across devices through a private GitHub Gist.
 
@@ -13,13 +13,14 @@ Data is stored in the browser (localStorage) and optionally synced across device
 3. [Workout tab](#workout-tab)
 4. [Nutrition tab](#nutrition-tab)
 5. [Streak tab](#streak-tab)
-6. [Plan tab](#plan-tab)
-7. [The program](#the-program)
-8. [The science behind the numbers](#the-science-behind-the-numbers)
-9. [When to change what](#when-to-change-what)
-10. [Data, sync and backups](#data-sync-and-backups)
-11. [Development and deployment](#development-and-deployment)
-12. [Editing the program or formulas](#editing-the-program-or-formulas)
+6. [Hair tab](#hair-tab)
+7. [Plan tab](#plan-tab)
+8. [The program](#the-program)
+9. [The science behind the numbers](#the-science-behind-the-numbers)
+10. [When to change what](#when-to-change-what)
+11. [Data, sync and backups](#data-sync-and-backups)
+12. [Development and deployment](#development-and-deployment)
+13. [Editing the program or formulas](#editing-the-program-or-formulas)
 
 ---
 
@@ -50,6 +51,7 @@ Four tabs in the bottom bar.
 | Workout | Today's session, logging sets, rest timer, steps, cardio, progress charts |
 | Nutrition | Profile and targets, daily weight/calories/protein, weekly body fat, trends, physique tracking |
 | Streak | Monthly heatmap of goal-met days, current and best streak, per-day breakdown |
+| Hair | Daily hair routine checklist, 52-week timeline with checkpoints, monthly photo check-ins, evidence |
 | Plan | Full program with rest times, the science, cloud sync, backups |
 
 Everything saves as you type. The dot in the top right shows sync state: grey means local only, amber means saving, green means synced, red means a sync error (hover or tap for the message).
@@ -150,7 +152,29 @@ Flags:
 - **Monthly heatmap**: each cell shows the date and the cycle slot (U1, L1, U2, L2, AB, R). Shade shows the day's score: nothing logged, logged, half or more of targets, all targets. Today has a white outline. Tap a day to see its breakdown.
 - **Day breakdown**: each target (workout if scheduled, calories, protein, steps) with your value, the goal and hit / missed / not logged, plus the sets you logged.
 
-Scoring: a day is **full** when every applicable target is hit, **partial** when at least half are. Streaks count partial or better. Rest days only need calories, protein and steps. Calories count as hit when within 100 kcal of target or under it.
+Scoring: a day is **full** when every applicable target is hit, **partial** when at least half are. Streaks count partial or better. Rest days only need calories, protein and steps. Calories count as hit when within 100 kcal of target or under it. If the hair routine is active and set to count, it is one more target: hit when every enabled habit is ticked that day.
+
+---
+
+## Hair tab
+
+Optional. Built for pattern (androgenetic) thinning at the crown and hairline using only natural, vegetarian options that have human trial evidence. It is a routine tracker, not a treatment guarantee; the card "The honest baseline" explains the limits and why a dermatologist visit plus a blood panel (ferritin, vitamin D, zinc, B12, TSH) is step one.
+
+**Setup**: pick the habits you will do and a start date.
+
+**Habits** (each with its source in the Evidence card):
+- Scalp massage 4 to 5 min daily (Koyama 2016)
+- Rosemary oil on the scalp, evenings (Panahi 2015, matched minoxidil 2% at 6 months)
+- Pumpkin seed oil or seeds with food daily (Cho 2014, 400 mg/day, 24 weeks)
+- Hit protein target (auto-filled from the nutrition log)
+- 7+ hours sleep
+- Gentle handling (no heat, rough towelling, tight caps)
+
+**Timeline**: a 52-week bar with checkpoints at week 0 (baseline photos and labs), 4 (expect a temporary shed), 12 (first photos, judge shedding only), 24 (main checkpoint, where both trials showed results; if clearly worse, escalate to a dermatologist for microneedling, low-level laser or medication), and 52.
+
+**Today's routine**: tap to tick habits, with date navigation. **Weekly adherence**: per-habit days done per week; target 6 of 7. **Monthly check-in**: photos taken, crown and hairline ratings 1 to 5, shedding vs last month, notes; saved as a history table. **Settings**: toggle habits, include or exclude the routine from the Streak calendar, stop the routine.
+
+The Evidence card also covers diet for a vegetarian in a deficit (protein, iron with vitamin C, zinc, vitamin D, B12, omega-3) and what to avoid (megadose biotin, high vitamin A, crash dieting).
 
 ---
 
@@ -224,6 +248,12 @@ Rest times: 3 min on heavy compounds (bench, squat pattern, hinge, overhead pres
 - Add a block for at most two groups. Leave it for 8 weeks, then re-check. Remove it when the group is no longer flagged.
 - Left/right gap: switch that exercise to its single-limb version and lead with the weaker side.
 
+**Hair routine (monthly, and at the week 12 / 24 checkpoints)**
+- Do not judge before week 12; do not decide before week 24.
+- Adherence under 4 days a week on the oil or massage: fix consistency before changing anything.
+- Week 24 photos clearly worse: the natural routine has had a fair trial, see a dermatologist about non-drug options (microneedling, low-level laser) or medication.
+- Scalp irritation from rosemary oil: dilute more (fewer drops per teaspoon of carrier) or drop to alternate nights.
+
 **Cycle**
 - Missed a day: do nothing, the session waits.
 - Travelling or sick for a week or more: use "Reset cycle start" when you are back so rest days land where you want.
@@ -263,4 +293,4 @@ Stack: React 19, Vite, Recharts. No backend.
 - `src/lib/calc.js`: BMR, body fat, targets, loss rate bands, step bands, cycle scheduling, streak scoring, physique analysis thresholds (`TAPE_NOISE`, `FOCUS_MIN_WEEKS`, `FOCUS_MIN_READINGS`).
 - `src/lib/storage.js`: localStorage and Gist sync.
 - `src/styles.css`: theme tokens at the top.
-- `src/tabs/*.jsx` and `src/components/Physique.jsx`: the screens.
+- `src/tabs/*.jsx` and `src/components/Physique.jsx`: the screens. Hair habits and checkpoints are defined at the top of `src/tabs/Hair.jsx`.

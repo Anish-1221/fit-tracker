@@ -15,6 +15,7 @@ export const emptyState = () => ({
   daily: {},
   measurements: {},
   prefs: { defaultAlts: {} },
+  hair: null,
 })
 
 export function loadLocal() {
