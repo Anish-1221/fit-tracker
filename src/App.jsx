@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { loadLocal, saveLocal, loadSettings, saveSettings, pullGist, pushGist, findOrCreateGist } from './lib/storage'
+import { loadLocal, saveLocal, loadSettings, saveSettings, pullGist, pushGist, findOrCreateGist, mergeStates } from './lib/storage'
 import { buildSchedule, computeTargets, weeklyAverages } from './lib/calc'
 import Today from './tabs/Today'
 import Nutrition from './tabs/Nutrition'
@@ -53,11 +53,12 @@ export default function App() {
         if (!gistId) { gistId = await findOrCreateGist(settings.token); setSettings({ ...settings, gistId }) }
         const remote = await pullGist(settings.token, gistId)
         if (cancelled) return
-        if (remote && remote.updatedAt > stateRef.current.updatedAt) {
-          skipNextPush.current = true
-          setState(remote); saveLocal(remote); showToast('Loaded newer data from cloud')
-        } else if (remote && remote.updatedAt < stateRef.current.updatedAt) {
-          await pushGist(settings.token, gistId, stateRef.current)
+        if (remote) {
+          const merged = mergeStates(stateRef.current, remote)
+          const changedLocal = JSON.stringify(merged) !== JSON.stringify(stateRef.current)
+          const changedRemote = JSON.stringify(merged) !== JSON.stringify(remote)
+          if (changedLocal) { skipNextPush.current = true; setState(merged); saveLocal(merged); showToast('Merged data from cloud') }
+          if (changedRemote) await pushGist(settings.token, gistId, merged)
         }
         setSync({ status: 'ok', msg: 'Synced' })
       } catch (e) {
@@ -76,7 +77,10 @@ export default function App() {
     pushTimer.current = setTimeout(async () => {
       try {
         setSync({ status: 'busy', msg: 'Saving' })
-        await pushGist(settings.token, settings.gistId, stateRef.current)
+        const remote = await pullGist(settings.token, settings.gistId)
+        const merged = mergeStates(stateRef.current, remote)
+        if (JSON.stringify(merged) !== JSON.stringify(stateRef.current)) { skipNextPush.current = true; setState(merged); saveLocal(merged) }
+        await pushGist(settings.token, settings.gistId, merged)
         setSync({ status: 'ok', msg: 'Synced' })
       } catch (e) { setSync({ status: 'err', msg: e.message }) }
     }, 1500)

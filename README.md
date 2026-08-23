@@ -266,8 +266,9 @@ Rest times: 3 min on heavy compounds (bench, squat pattern, hinge, overhead pres
 ## Data, sync and backups
 
 - **Local**: everything is in the browser's localStorage under `fit-tracker:data`. Clearing site data deletes it, so keep backups.
-- **Cloud sync**: a private Gist named `Fit Tracker data` containing `fit-tracker-data.json`. The token is stored only in the browser (`fit-tracker:settings`) and never leaves your devices except to talk to api.github.com. On load the site pulls the Gist and keeps whichever copy has the newer `updatedAt`; every change pushes after 1.5 s.
-- **Conflicts**: last write wins. Avoid editing the same day on two devices at once.
+- **Cloud sync**: a private Gist named `Fit Tracker data` containing `fit-tracker-data.json`. The token is stored only in the browser (`fit-tracker:settings`) and never leaves your devices except to talk to api.github.com. On load, and again before every push, the site pulls the Gist and **merges entry by entry**: workouts, daily logs, measurements and hair logs are combined by date, so an entry made on one device is never wiped by a stale copy on another. When the same date exists on both, the copy with the newer overall `updatedAt` wins for that date. Profile, cycle and settings come from the newer copy.
+- **Conflicts**: editing the same date on two devices within a couple of minutes can still lose one of the two edits for that date. Deleting an entry on one device while another is offline may bring it back when the other syncs; delete it again.
+- **Recovery**: the Gist keeps every revision. On gist.github.com open the Gist, click Revisions, pick one, click Raw, save it as a .json file and use Restore backup.
 - **Backup**: Plan tab → Download backup gives a JSON file. Restore replaces everything on the device and syncs up.
 - **Token**: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate → tick only `gist`. If it expires, generate a new one and reconnect; the Gist is found automatically.
 

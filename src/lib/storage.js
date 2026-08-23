@@ -85,3 +85,26 @@ export function exportJson(state) {
   a.click()
   URL.revokeObjectURL(a.href)
 }
+
+// Merge two copies entry by entry so a stale device can never wipe entries
+// made on another one. Collections are keyed by date: a key present in only
+// one copy is kept; a key present in both takes the one from the copy with
+// the newer updatedAt. Singletons (profile, cycle, prefs, hair settings) come
+// from the newer copy.
+const COLLECTIONS = ['workouts', 'daily', 'measurements']
+export function mergeStates(a, b) {
+  if (!a) return b
+  if (!b) return a
+  const [newer, older] = a.updatedAt >= b.updatedAt ? [a, b] : [b, a]
+  const out = { ...older, ...newer }
+  COLLECTIONS.forEach((c) => { out[c] = { ...(older[c] || {}), ...(newer[c] || {}) } })
+  if (older.hair || newer.hair) {
+    out.hair = { ...(older.hair || {}), ...(newer.hair || {}) }
+    out.hair.log = { ...(older.hair?.log || {}), ...(newer.hair?.log || {}) }
+    out.hair.checkins = { ...(older.hair?.checkins || {}), ...(newer.hair?.checkins || {}) }
+  }
+  out.prefs = { ...(older.prefs || {}), ...(newer.prefs || {}) }
+  out.prefs.defaultAlts = { ...(older.prefs?.defaultAlts || {}), ...(newer.prefs?.defaultAlts || {}) }
+  out.updatedAt = Math.max(a.updatedAt || 0, b.updatedAt || 0)
+  return out
+}

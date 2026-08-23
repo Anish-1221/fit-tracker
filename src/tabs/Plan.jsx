@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { DAYS, EXERCISES, CYCLE, FOCUS_LOOKUP, yt, restLabel } from '../data/program'
-import { exportJson, findOrCreateGist, pullGist, saveLocal } from '../lib/storage'
+import { exportJson, findOrCreateGist, pullGist, saveLocal, mergeStates } from '../lib/storage'
 import { fmtDate, dayLabel } from '../lib/calc'
 
 export default function Plan({ state, update, settings, setSettings, showToast, sync }) {
@@ -80,7 +80,7 @@ function SyncCard({ settings, setSettings, showToast, sync, state, update }) {
     setBusy(true)
     try {
       const remote = await pullGist(settings.token, settings.gistId)
-      if (remote) { update(() => remote); showToast('Pulled cloud data') }
+      if (remote) { update((s) => mergeStates(s, remote)); showToast('Merged cloud data') }
     } catch (e) { showToast(e.message, true) }
     setBusy(false)
   }
