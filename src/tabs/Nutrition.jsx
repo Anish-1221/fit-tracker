@@ -32,7 +32,7 @@ function ProfileForm({ state, update, onDone }) {
     sex: p.sex || 'male', age: p.age || '', weightKg: p.weightKg || '',
     ft: p.ft || '', inch: p.inch ?? '', activity: p.activity || 'light',
     neckCm: p.neckCm || '', waistCm: p.waistCm || '', hipCm: p.hipCm || '',
-    goalBodyFat: p.goalBodyFat || '', bodyFatOverride: p.bodyFatOverride || '',
+    goalBodyFat: p.goalBodyFat || '', bodyFatOverride: p.bodyFatOverride || '', stepsOverride: p.stepsOverride || '',
   })
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const heightCm = ftInToCm(+f.ft || 0, +f.inch || 0)
@@ -65,6 +65,7 @@ function ProfileForm({ state, update, onDone }) {
         <div className="field"><label>Estimated body fat</label><div className="input mono" style={{ display: 'flex', alignItems: 'center' }}>{navy != null ? navy.toFixed(1) + ' %' : <span className="faint">needs neck, waist, height</span>}</div></div>
         <div className="field"><label>Override body fat (%)<span className="faint"> if you know it</span></label><input className="input mono" type="number" step="0.1" value={f.bodyFatOverride} onChange={set('bodyFatOverride')} /></div>
         <div className="field"><label>Goal body fat (%)</label><input className="input mono" type="number" step="0.5" placeholder="e.g. 15" value={f.goalBodyFat} onChange={set('goalBodyFat')} /></div>
+        <div className="field"><label>Step goal override<span className="faint"> blank = automatic</span></label><input className="input mono" type="number" step="500" placeholder="auto" value={f.stepsOverride} onChange={set('stepsOverride')} /></div>
       </div>
       <div className="note" style={{ marginTop: 14 }}>For men, 10 to 15% is a lean athletic look with visible abs; 15 to 18% is fit and sustainable. Going below 10% is not a healthy long-term target. For women add roughly 8 to 10 points to those ranges.</div>
       <div className="btn-row" style={{ marginTop: 16, justifyContent: 'flex-end' }}>
@@ -104,7 +105,7 @@ function Targets({ targets: t, profile, onEdit }) {
           <b>Deficit {t.deficit} kcal</b>: sized so you lose about {(t.rate * 100).toFixed(2)}% of bodyweight per week. Helms, Aragon and Fitschen (2014) found 0.5 to 1% per week maximises muscle retention while dieting; the pace is set higher when you are further from goal and eases as you get close. Capped at 25% of maintenance and never below BMR. <br />
           <b>Protein {t.protein} g</b>: 2.5 g per kg of lean mass (you carry about {t.lbm.toFixed(1)} kg). The 2014 Helms review recommends 2.3 to 3.1 g/kg lean mass in a deficit; Morton et al. (2018) found gains plateau past about 1.6 to 2.2 g/kg bodyweight when not dieting. Higher protein also preserves muscle and keeps you fuller. <br />
           <b>Fat {t.fat} g</b>: 25% of calories, inside the recommended 15 to 30% band for hormone health. <b>Carbs {t.carbs} g</b> fill the rest to fuel training. <br />
-          <b>Steps</b>: Paluch et al. (2022, Lancet Public Health) found health benefits plateau near 8,000 to 10,000 steps for adults under 60. Walking is added on top because it raises expenditure without hurting recovery; the target scales with how far you are from goal. <br />
+          <b>Steps</b>: Paluch et al. (2022, Lancet Public Health) found health benefits plateau near 8,000 to 10,000 steps for adults under 60, so the target stays in that band (9,000 to 11,000, +2,000 on abs day). More steps burn more, but the deficit already handles fat loss, and a step goal that adds stress hurts recovery for no meaningful return. Set your own number in the profile if you prefer. <br />
           <b>Goal weight</b> assumes lean mass stays constant: lean mass / (1 - goal body fat). As a beginner you may add muscle at the same time, so the scale can move slower than this while you still get leaner. Re-measure weekly and trust the tape and the weekly averages over any single day.
         </div>
       </details>

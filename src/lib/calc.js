@@ -98,20 +98,21 @@ export function computeTargets(p) {
   return {
     BMR: Math.round(BMR), TDEE: Math.round(TDEE), maintenance, deficit, calories,
     protein, fat, carbs, lbm, bfNow, goalBf, gap, rate, goalWeight, weeksToGoal,
-    steps: stepTarget(gap), absDaySteps: stepTarget(gap) + 3000,
+    steps: p.stepsOverride ? +p.stepsOverride : stepTarget(gap),
+    absDaySteps: (p.stepsOverride ? +p.stepsOverride : stepTarget(gap)) + 2000,
     calorieWindow: 100, // within +-100 kcal counts as on target
   }
 }
 
 // Step target: Paluch et al. 2022 (Lancet Public Health) found benefits for
-// adults under 60 plateau around 8,000-10,000 steps. We start at 10k and scale
-// up with body fat gap because walking is the lowest-fatigue way to raise
-// expenditure without hurting lifting recovery.
+// adults under 60 plateau around 8,000-10,000 steps, so the default stays in
+// that band with only a small nudge when far from goal. The deficit does the
+// fat loss; steps support it. A target that adds stress subtracts more than
+// the extra burn adds. Overridable in the profile.
 export function stepTarget(gap) {
   if (gap <= 3) return 9000
-  if (gap <= 6) return 10000
-  if (gap <= 10) return 12000
-  return 14000
+  if (gap <= 8) return 10000
+  return 11000
 }
 
 // ---------- cycle ----------
