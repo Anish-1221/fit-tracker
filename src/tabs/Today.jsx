@@ -21,6 +21,31 @@ export function dayExercises(slot, state) {
 }
 const exDef = (id) => EXERCISES[id] || FOCUS_LOOKUP[id]
 
+function parseRange(reps) { const m = String(reps).match(/(\d+)\s*-\s*(\d+)/); return m ? { lo: +m[1], hi: +m[2] } : null }
+
+// Suggested working weight from the last session of this exact exercise,
+// applying the program's progression rule.
+function recommend(state, dateKey, slotId, altId, ex) {
+  const prev = lastSession(state, dateKey, slotId, altId)
+  if (!prev) return null
+  const sets = prev.sets.filter((s) => s.reps)
+  if (!sets.length) return null
+  const range = parseRange(ex.reps)
+  const top = Math.max(...sets.map((x) => +x.weight || 0))
+  const allTop = range ? sets.every((x) => +x.reps >= range.hi) : false
+  const anyBelow = range ? sets.some((x) => +x.reps < range.lo) : false
+  const unit = ex.timed ? 's' : ' lb'
+  if (top === 0) {
+    if (ex.timed) return { weight: 0, note: allTop ? `You held ${range.hi}s everywhere: aim past it or slow the breathing.` : `Bodyweight, aim ${range ? range.hi + 's' : 'longer'} each set.` }
+    if (allTop && prev.effort !== 'max') return { weight: 5, note: 'All sets hit the top at bodyweight: add a 5 lb dumbbell or slow the tempo.' }
+    return { weight: 0, note: `Bodyweight again, build every set to ${range ? range.hi : 'the top'} reps.` }
+  }
+  if (allTop && prev.effort !== 'max') return { weight: top + 5, note: `Up 5: last time every set reached ${range.hi} with reps to spare.` }
+  if (anyBelow) return { weight: top, note: `Same ${top}${unit}: get every set to ${range.lo}+ reps first.` }
+  if (allTop) return { weight: top, note: `Same ${top}${unit}: you hit the top but marked it max. When a set feels like it has 1-2 reps spare, go up 5.` }
+  return { weight: top, note: `Same ${top}${unit}, push reps toward ${range ? range.hi : 'the top of the range'}.` }
+}
+
 function emptyDraft(slot, state, dateKey) {
   const day = DAYS[slot]
   return {
@@ -29,9 +54,10 @@ function emptyDraft(slot, state, dateKey) {
       const alt = state.prefs?.defaultAlts?.[id] || id
       const ex = exDef(id)
       const prev = lastSession(state, dateKey, id, alt)
+      const rec = recommend(state, dateKey, id, alt, ex)
       return {
         slot: id, alt,
-        sets: Array.from({ length: ex.sets }, (_, i) => ({ weight: prev?.sets?.[i]?.weight ?? '', reps: '' })),
+        sets: Array.from({ length: ex.sets }, (_, i) => ({ weight: rec != null ? (rec.weight || '') : (prev?.sets?.[i]?.weight ?? ''), reps: '' })),
         effort: '', notes: '',
       }
     }),
@@ -117,7 +143,8 @@ export default function Today({ state, update, schedule, targets, showToast, flu
   const changeAlt = (i, alt) => {
     const ex = draft.exercises[i]
     const prev = lastSession(state, dateKey, ex.slot, alt)
-    changeEx(i, { alt, sets: ex.sets.map((s, k) => ({ weight: prev?.sets?.[k]?.weight ?? '', reps: '' })) })
+    const rec = recommend(state, dateKey, ex.slot, alt, exDef(ex.slot))
+    changeEx(i, { alt, sets: ex.sets.map((s, k) => ({ weight: rec != null ? (rec.weight || '') : (prev?.sets?.[k]?.weight ?? ''), reps: '' })) })
     update((s) => ({ ...s, prefs: { ...s.prefs, defaultAlts: { ...(s.prefs?.defaultAlts || {}), [ex.slot]: alt } } }))
   }
 
@@ -247,6 +274,14 @@ export default function Today({ state, update, schedule, targets, showToast, flu
                   {(() => { const a = ex.alternatives.find((x) => x.id === e.alt); return a?.note ? <span className="tiny faint">{a.note}. Targets {a.muscles.toLowerCase()}. Options are ordered easiest first.</span> : null })()}
                 </div>
 
+                {(() => { const rec = recommend(state, dateKey, e.slot, e.alt, ex); return rec && !saved ? (
+                  <div className="last" style={{ marginTop: 8 }}>
+                    <span className="accent">Suggested:</span>
+                    <b>{ex.timed ? 'bodyweight' : rec.weight ? rec.weight + ' lb all sets' : 'bodyweight'}</b>
+                    <span>{rec.note}</span>
+                    {rec.weight >= 20 && ex.rest >= 120 && <span className="faint">Warm up with about half that for 8 easy reps first, don't log it.</span>}
+                  </div>
+                ) : null })()}
                 {prev && (
                   <div className="last">
                     <span>Last ({fmtDate(prev.date)}):</span>
