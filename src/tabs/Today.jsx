@@ -91,7 +91,7 @@ function useTimer() {
 const mmss = (s) => { const a = Math.abs(s); return (s < 0 ? '+' : '') + String(Math.floor(a / 60)).padStart(2, '0') + ':' + String(a % 60).padStart(2, '0') }
 
 // ---------- main ----------
-export default function Today({ state, update, schedule, targets, showToast }) {
+export default function Today({ state, update, schedule, targets, showToast, flushNow }) {
   const [dateKey, setDateKey] = useState(todayKey())
   const sched = useMemo(() => (dateKey <= todayKey() ? schedule : buildSchedule(state, dateKey)), [schedule, state, dateKey])
   const info = sched.byDate[dateKey]
@@ -126,6 +126,7 @@ export default function Today({ state, update, schedule, targets, showToast }) {
     if (!done) { showToast('Log at least one set before saving', true); return }
     update((s) => ({ ...s, workouts: { ...s.workouts, [dateKey]: { ...draft, savedAt: Date.now() } } }))
     setDirty(false); showToast('Session saved')
+    setTimeout(() => flushNow && flushNow(), 50)
   }
   const remove = () => {
     if (!confirm('Delete this logged session?')) return

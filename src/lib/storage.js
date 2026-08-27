@@ -69,10 +69,11 @@ export async function pullGist(token, gistId) {
   try { return { ...emptyState(), ...JSON.parse(content) } } catch { return null }
 }
 
-export async function pushGist(token, gistId, state) {
+export async function pushGist(token, gistId, state, keepalive = false) {
   const res = await api('/gists/' + gistId, {
     method: 'PATCH',
     body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(state) } } }),
+    keepalive,
   }, token)
   if (!res.ok) throw new Error('Could not save to the Gist (' + res.status + ')')
 }

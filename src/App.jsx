@@ -24,6 +24,9 @@ export default function App() {
   const pushTimer = useRef(null)
   const stateRef = useRef(state)
   stateRef.current = state
+  const settingsRef = useRef(settings)
+  settingsRef.current = settings
+  const lastPushedAt = useRef(0)
   const skipNextPush = useRef(true)
 
   const showToast = useCallback((msg, err = false) => {
@@ -69,24 +72,46 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.token])
 
-  // Debounced push after local changes.
+  // Push after local changes: debounced for typing, immediate for saves.
+  const doPush = useCallback(async (keepalive = false) => {
+    if (!settingsRef.current.token || !settingsRef.current.gistId) return
+    try {
+      setSync({ status: 'busy', msg: 'Saving' })
+      if (keepalive) {
+        // Page is being hidden: one best-effort request, no pre-pull.
+        await pushGist(settingsRef.current.token, settingsRef.current.gistId, stateRef.current, true)
+      } else {
+        const remote = await pullGist(settingsRef.current.token, settingsRef.current.gistId)
+        const merged = mergeStates(stateRef.current, remote)
+        if (JSON.stringify(merged) !== JSON.stringify(stateRef.current)) { skipNextPush.current = true; setState(merged); saveLocal(merged) }
+        await pushGist(settingsRef.current.token, settingsRef.current.gistId, merged)
+      }
+      lastPushedAt.current = stateRef.current.updatedAt
+      setSync({ status: 'ok', msg: 'Synced' })
+    } catch (e) { setSync({ status: 'err', msg: e.message }) }
+  }, [])
+
   useEffect(() => {
     if (skipNextPush.current) { skipNextPush.current = false; return }
     if (!settings.token || !settings.gistId) return
     clearTimeout(pushTimer.current)
-    pushTimer.current = setTimeout(async () => {
-      try {
-        setSync({ status: 'busy', msg: 'Saving' })
-        const remote = await pullGist(settings.token, settings.gistId)
-        const merged = mergeStates(stateRef.current, remote)
-        if (JSON.stringify(merged) !== JSON.stringify(stateRef.current)) { skipNextPush.current = true; setState(merged); saveLocal(merged) }
-        await pushGist(settings.token, settings.gistId, merged)
-        setSync({ status: 'ok', msg: 'Synced' })
-      } catch (e) { setSync({ status: 'err', msg: e.message }) }
-    }, 1500)
+    pushTimer.current = setTimeout(() => doPush(), 1500)
     return () => clearTimeout(pushTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.updatedAt])
+
+  // Flush pending changes the moment the app is backgrounded or closed.
+  useEffect(() => {
+    const flush = () => {
+      if (document.visibilityState !== 'hidden') return
+      if (lastPushedAt.current >= stateRef.current.updatedAt) return
+      clearTimeout(pushTimer.current)
+      doPush(true)
+    }
+    document.addEventListener('visibilitychange', flush)
+    window.addEventListener('pagehide', flush)
+    return () => { document.removeEventListener('visibilitychange', flush); window.removeEventListener('pagehide', flush) }
+  }, [doPush])
 
   // Targets follow the most recent weekly average weight and the latest
   // measured body fat, so they adjust as you progress.
@@ -100,7 +125,7 @@ export default function App() {
   }, [state.profile, state.daily, state.measurements])
   const schedule = useMemo(() => buildSchedule(state), [state])
 
-  const ctx = { state, update, targets, schedule, settings, setSettings, showToast, setTab, sync }
+  const ctx = { state, update, targets, schedule, settings, setSettings, showToast, setTab, sync, flushNow: () => { clearTimeout(pushTimer.current); doPush() } }
 
   return (
     <div className="app">
