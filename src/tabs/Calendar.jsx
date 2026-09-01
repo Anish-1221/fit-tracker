@@ -3,9 +3,9 @@ import { DAYS } from '../data/program'
 import { todayKey, toKey, fromKey, dayScore, streak, fmtDate } from '../lib/calc'
 
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const LABELS = { workout: 'Workout', calories: 'Calories', protein: 'Protein', steps: 'Steps' }
+const LABELS = { workout: 'Workout', calories: 'Calories', protein: 'Protein', steps: 'Steps', hair: 'Hair routine' }
 
-export default function Calendar({ state, schedule, targets }) {
+export default function Calendar({ state, schedule }) {
   const today = todayKey()
   const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
   const [sel, setSel] = useState(today)
@@ -19,7 +19,7 @@ export default function Calendar({ state, schedule, targets }) {
     return out
   }, [month])
 
-  const current = useMemo(() => streak(state, schedule, targets), [state, schedule, targets])
+  const current = useMemo(() => streak(state, schedule), [state, schedule])
   const best = useMemo(() => {
     // longest run of level>=2 days in history
     const keys = new Set([...Object.keys(state.daily || {}), ...Object.keys(state.workouts || {})])
@@ -27,22 +27,23 @@ export default function Calendar({ state, schedule, targets }) {
     const sorted = [...keys].sort()
     let run = 0, max = 0, prev = null
     for (const k of sorted) {
-      const ok = dayScore(state, k, schedule, targets).level >= 2
+      const ok = dayScore(state, k, schedule).level >= 2
       if (ok && prev && fromKey(k) - fromKey(prev) === 86400000) run++
       else run = ok ? 1 : 0
       prev = k
       max = Math.max(max, run)
     }
     return max
-  }, [state, schedule, targets])
+  }, [state, schedule])
 
   const monthStats = useMemo(() => {
     const ks = cells.filter((k) => k && k <= today)
-    const scores = ks.map((k) => dayScore(state, k, schedule, targets))
+    const scores = ks.map((k) => dayScore(state, k, schedule))
     return { full: scores.filter((s) => s.level === 3).length, partial: scores.filter((s) => s.level === 2).length, logged: scores.filter((s) => s.level >= 1).length }
-  }, [cells, state, schedule, targets, today])
+  }, [cells, state, schedule, today])
 
-  const selScore = dayScore(state, sel, schedule, targets)
+  const selScore = dayScore(state, sel, schedule)
+  const tg = selScore.targets
   const selSched = schedule.byDate[sel]
 
   return (
@@ -70,7 +71,7 @@ export default function Calendar({ state, schedule, targets }) {
           {cells.map((k, i) => {
             if (!k) return <div className="cell empty" key={'e' + i} />
             const future = k > today
-            const s = future ? { level: 0 } : dayScore(state, k, schedule, targets)
+            const s = future ? { level: 0 } : dayScore(state, k, schedule)
             const sc = schedule.byDate[k]
             return (
               <div key={k} className={'cell' + (future ? ' future' : ' l' + s.level) + (k === today ? ' today' : '') + (k === sel ? ' selected' : '')} onClick={() => !future && setSel(k)}>
@@ -97,8 +98,8 @@ export default function Calendar({ state, schedule, targets }) {
             <tbody>
               {selScore.checks.map((c) => {
                 const d = state.daily?.[sel] || {}
-                const goal = c.key === 'calories' ? targets.calories + ' kcal' : c.key === 'protein' ? targets.protein + ' g' : c.key === 'steps' ? (selSched?.slot === 'abs' ? targets.absDaySteps : targets.steps).toLocaleString() : DAYS[selSched?.slot]?.label
-                const val = c.key === 'workout' ? (selSched?.status === 'done' ? 'logged' : selSched?.status) : d[c.key] ? (+d[c.key]).toLocaleString() : '-'
+                const goal = c.key === 'hair' ? 'all habits' : c.key === 'calories' ? tg.calories + ' kcal' : c.key === 'protein' ? tg.protein + ' g' : c.key === 'steps' ? (selSched?.slot === 'abs' ? tg.absDaySteps : tg.steps).toLocaleString() : DAYS[selSched?.slot]?.label
+                const val = c.key === 'hair' ? (c.ok ? 'done' : c.empty ? '-' : 'partial') : c.key === 'workout' ? (selSched?.status === 'done' ? 'logged' : selSched?.status) : d[c.key] ? (+d[c.key]).toLocaleString() : '-'
                 return <tr key={c.key}><td>{LABELS[c.key]}</td><td className="num">{val}</td><td className="num faint">{goal}</td><td className="num"><span className={'chip ' + (c.ok ? 'teal' : c.empty ? '' : 'rose')}>{c.ok ? 'hit' : c.empty ? 'not logged' : 'missed'}</span></td></tr>
               })}
             </tbody>

@@ -99,7 +99,7 @@ export function computeTargets(p) {
     BMR: Math.round(BMR), TDEE: Math.round(TDEE), maintenance, deficit, calories,
     protein, fat, carbs, lbm, bfNow, goalBf, gap, rate, goalWeight, weeksToGoal,
     steps: p.stepsOverride ? +p.stepsOverride : stepTarget(gap),
-    absDaySteps: (p.stepsOverride ? +p.stepsOverride : stepTarget(gap)) + 2000,
+    absDaySteps: p.stepsOverride ? +p.stepsOverride : stepTarget(gap) + 2000,
     calorieWindow: 100, // within +-100 kcal counts as on target
   }
 }
@@ -181,8 +181,21 @@ export function weeklyAverages(daily) {
 // Epley estimated one-rep max, used only as a progression index.
 export const e1rm = (w, r) => (w && r ? Math.round(w * (1 + r / 30)) : 0)
 
-// Day score for the calendar: returns { level: 0..3, hits: [...], misses: [...] }
-export function dayScore(state, dateKey, schedule, targets) {
+// Targets as they stood on a given date: weight average and body fat use only
+// entries up to that date, so past days keep the goals they were lived under.
+export function computeTargetsAt(state, dateKey) {
+  if (!state.profile) return null
+  const dailyUpTo = Object.fromEntries(Object.entries(state.daily || {}).filter(([k]) => k <= dateKey))
+  const weeks = weeklyAverages(dailyUpTo).filter((w) => w.weight != null)
+  const latestWeight = weeks.length ? weeks[weeks.length - 1].weight : state.profile.weightKg
+  const ms = Object.keys(state.measurements || {}).filter((k) => k <= dateKey && state.measurements[k].bodyfat != null).sort()
+  const latestBf = ms.length ? state.measurements[ms[ms.length - 1]].bodyfat : state.profile.bodyFat
+  return computeTargets({ ...state.profile, weightKg: latestWeight || state.profile.weightKg, bodyFat: latestBf })
+}
+
+// Day score for the calendar, judged against that day's own targets.
+export function dayScore(state, dateKey, schedule) {
+  const targets = computeTargetsAt(state, dateKey)
   const sched = schedule.byDate[dateKey]
   const daily = state.daily?.[dateKey] || {}
   const checks = []
@@ -216,16 +229,16 @@ export function dayScore(state, dateKey, schedule, targets) {
     else if (hits >= Math.ceil(checks.length / 2)) level = 2
     else level = 1
   }
-  return { level, hits, total: checks.length, checks }
+  return { level, hits, total: checks.length, checks, targets }
 }
 
-export function streak(state, schedule, targets) {
+export function streak(state, schedule) {
   let n = 0
   let d = todayKey()
   // today counts if already full; otherwise start from yesterday
-  if (dayScore(state, d, schedule, targets).level < 2) d = addDays(d, -1)
+  if (dayScore(state, d, schedule).level < 2) d = addDays(d, -1)
   while (n < 400) {
-    const s = dayScore(state, d, schedule, targets)
+    const s = dayScore(state, d, schedule)
     if (s.level >= 2) { n++; d = addDays(d, -1) } else break
   }
   return n
