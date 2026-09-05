@@ -123,18 +123,23 @@ export default function Today({ state, update, schedule, targets, showToast, flu
   const info = sched.byDate[dateKey]
   const slot = info?.slot
   const saved = state.workouts?.[dateKey]
+  const [pick, setPick] = useState('')
   const [draft, setDraft] = useState(null)
   const [dirty, setDirty] = useState(false)
   const timer = useTimer()
   const daily = state.daily?.[dateKey] || {}
 
+  const effSlot = saved ? saved.day : (pick || (slot !== 'rest' ? slot : ''))
+
+  useEffect(() => { setPick('') }, [dateKey])
+
   useEffect(() => {
     if (saved) setDraft(JSON.parse(JSON.stringify(saved)))
-    else if (slot && slot !== 'rest') setDraft(emptyDraft(slot, state, dateKey))
+    else if (effSlot && effSlot !== 'rest') setDraft(emptyDraft(effSlot, state, dateKey))
     else setDraft(null)
     setDirty(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateKey, slot, saved])
+  }, [dateKey, effSlot, saved])
 
   const setDaily = (patch) => update((s) => ({ ...s, daily: { ...s.daily, [dateKey]: { ...(s.daily?.[dateKey] || {}), ...patch } } }))
 
@@ -169,6 +174,7 @@ export default function Today({ state, update, schedule, targets, showToast, flu
   if (!state.cycle?.startDate) return <StartCycle update={update} />
 
   const day = slot ? DAYS[slot] : null
+  const effDay = effSlot ? DAYS[effSlot] : null
   const stepGoal = targets ? (slot === 'abs' ? targets.absDaySteps : targets.steps) : 10000
 
   return (
@@ -231,10 +237,21 @@ export default function Today({ state, update, schedule, targets, showToast, flu
       </section>
 
       {/* Session */}
-      {draft && day && (
+      {!saved && (
+        <section className="card">
+          <div className="card-head"><h2>Recording</h2>{day && <span className="chip">{day.label} scheduled</span>}</div>
+          <select className="input" value={effSlot} onChange={(e) => setPick(e.target.value)}>
+            {slot === 'rest' && <option value="">Rest day, nothing to log</option>}
+            {['upper1', 'lower1', 'upper2', 'lower2', 'abs'].map((k) => <option key={k} value={k}>{DAYS[k].label}{k === slot ? ' (scheduled)' : ''}</option>)}
+          </select>
+          {effSlot && slot !== effSlot && <p className="tiny faint" style={{ marginTop: 8 }}>Recording {DAYS[effSlot].label} today counts it as today's session and the cycle continues from the next slot.</p>}
+        </section>
+      )}
+
+      {draft && effDay && (
         <section className="card">
           <div className="card-head">
-            <h2>{day.label} session</h2>
+            <h2>{effDay.label} session</h2>
             <div className="btn-row">
               {saved && <button className="btn sm danger ghost" onClick={remove}>Delete</button>}
               {!saved && info?.status !== 'rest' && <button className="btn sm ghost" onClick={skip}>Skip session</button>}

@@ -123,6 +123,7 @@ export function stepTarget(gap) {
 export function buildSchedule(state, untilKey) {
   const start = state.cycle?.startDate
   if (!start) return { byDate: {}, todaySlot: null, index: 0 }
+  if (state.cycle?.mode === 'fixed') return buildFixedSchedule(state, untilKey)
   const skipped = new Set(state.cycle?.skipped || [])
   const byDate = {}
   let i = state.cycle?.startIndex || 0
@@ -157,6 +158,33 @@ export function buildSchedule(state, untilKey) {
     j++; dd = addDays(dd, 1)
   }
   return { byDate, todaySlot, index: i, upcoming }
+}
+
+// Fixed weekly mode: each calendar day has its slot, forever. A missed
+// session stays missed (log it later on any day via the session picker);
+// nothing shifts.
+function buildFixedSchedule(state, untilKey) {
+  const start = state.cycle.startDate
+  const si = state.cycle.startIndex || 0
+  const skipped = new Set(state.cycle?.skipped || [])
+  const byDate = {}
+  const end = untilKey || todayKey()
+  const last = diffDays(start, end) >= 0 ? end : start
+  let d = start
+  while (diffDays(d, last) >= 0) {
+    const slot = CYCLE[(si + diffDays(start, d)) % CYCLE.length]
+    const logged = state.workouts?.[d]
+    if (logged) byDate[d] = { slot: logged.day, status: 'done', extra: slot === 'rest' }
+    else if (slot === 'rest') byDate[d] = { slot, status: 'rest' }
+    else if (skipped.has(d)) byDate[d] = { slot, status: 'skipped' }
+    else if (d !== last) byDate[d] = { slot, status: 'missed' }
+    else byDate[d] = { slot, status: 'planned' }
+    d = addDays(d, 1)
+  }
+  const upcoming = []
+  let dd = addDays(last, 1)
+  for (let n = 0; n < 7; n++) { upcoming.push({ date: dd, slot: CYCLE[(si + diffDays(start, dd)) % CYCLE.length] }); dd = addDays(dd, 1) }
+  return { byDate, todaySlot: byDate[last]?.slot, index: si + diffDays(start, last), upcoming }
 }
 
 export const dayLabel = (slot) => DAYS[slot]?.label || slot

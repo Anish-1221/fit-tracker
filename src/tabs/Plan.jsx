@@ -131,6 +131,15 @@ function DataCard({ state, update, showToast }) {
     <section className="card">
       <div className="card-head"><h2>Your data</h2><span className="chip">{n} sessions, {m} daily logs</span></div>
       <p className="muted small">Cycle started {state.cycle?.startDate ? fmtDate(state.cycle.startDate, { month: 'short', day: 'numeric', year: 'numeric' }) + ' with ' + dayLabel(CYCLE[state.cycle.startIndex || 0]) : 'not yet'}.</p>
+      <div className="divider" />
+      <div className="field">
+        <label>When a session is missed</label>
+        <div className="seg">
+          <button className={(state.cycle?.mode || 'shift') === 'shift' ? 'active' : ''} onClick={() => update((s) => ({ ...s, cycle: { ...s.cycle, mode: 'shift' } }))}>Cycle waits and shifts</button>
+          <button className={state.cycle?.mode === 'fixed' ? 'active' : ''} onClick={() => update((s) => ({ ...s, cycle: { ...s.cycle, mode: 'fixed' } }))}>Fixed weekly calendar</button>
+        </div>
+        <span className="tiny faint">Fixed: every weekday keeps its session forever (missed ones stay missed; log any session on any day with the Recording picker). Shift: a missed session waits for you and the week slides.</span>
+      </div>
       <div className="btn-row" style={{ marginTop: 12 }}>
         <button className="btn sm" onClick={() => exportJson(state)}>Download backup</button>
         <button className="btn sm" onClick={() => fileRef.current.click()}>Restore backup</button>
