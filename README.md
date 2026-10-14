@@ -1,6 +1,6 @@
 # Fit Tracker
 
-A personal workout, nutrition, body composition and physique tracker. Single user, no login, runs entirely in the browser, hosted on GitHub Pages at https://Anish-1221.github.io/fit-tracker/
+A personal workout, nutrition, body composition, physique and hair routine tracker. Single user, no login, runs entirely in the browser, hosted on GitHub Pages at https://Anish-1221.github.io/fit-tracker/
 
 Data is stored in the browser (localStorage) and optionally synced across devices through a private GitHub Gist.
 
@@ -13,13 +13,14 @@ Data is stored in the browser (localStorage) and optionally synced across device
 3. [Workout tab](#workout-tab)
 4. [Nutrition tab](#nutrition-tab)
 5. [Streak tab](#streak-tab)
-6. [Plan tab](#plan-tab)
-7. [The program](#the-program)
-8. [The science behind the numbers](#the-science-behind-the-numbers)
-9. [When to change what](#when-to-change-what)
-10. [Data, sync and backups](#data-sync-and-backups)
-11. [Development and deployment](#development-and-deployment)
-12. [Editing the program or formulas](#editing-the-program-or-formulas)
+6. [Hair tab](#hair-tab)
+7. [Plan tab](#plan-tab)
+8. [The program](#the-program)
+9. [The science behind the numbers](#the-science-behind-the-numbers)
+10. [When to change what](#when-to-change-what)
+11. [Data, sync and backups](#data-sync-and-backups)
+12. [Development and deployment](#development-and-deployment)
+13. [Editing the program or formulas](#editing-the-program-or-formulas)
 
 ---
 
@@ -50,6 +51,7 @@ Four tabs in the bottom bar.
 | Workout | Today's session, logging sets, rest timer, steps, cardio, progress charts |
 | Nutrition | Profile and targets, daily weight/calories/protein, weekly body fat, trends, physique tracking |
 | Streak | Monthly heatmap of goal-met days, current and best streak, per-day breakdown |
+| Hair | Hair routine checklist, weekly shed count, 52-week timeline with checkpoints, monthly photo check-ins, evidence |
 | Plan | Full program with rest times, the science, cloud sync, backups |
 
 Everything saves as you type. The dot in the top right shows sync state: grey means local only, amber means saving, green means synced, red means a sync error (hover or tap for the message).
@@ -163,6 +165,28 @@ Scoring: a day is **full** when every applicable target is hit, **partial** when
 
 ---
 
+## Hair tab
+
+Optional. Built for pattern thinning at the crown and hairline using natural, vegetarian options with human trial evidence. It is a routine tracker, not a guaranteed treatment; "The honest baseline" card explains the limits and why a blood panel (ferritin, vitamin D, zinc, B12, TSH) and a dermatologist visit come first.
+
+**Setup**: pick the habits you will do and a start date (the day you actually start the oil).
+
+**Habits** (sources in the Evidence card):
+- Scalp massage, 4 to 5 min daily (Koyama 2016)
+- Rosemary oil on the scalp, **5 nights a week** (Panahi 2015 matched minoxidil 2% at 6 months). A pre-made blend like Mielle Rosemary Mint goes on as is, about 1 tsp (5 ml); pure rosemary essential oil must be diluted, 3 drops per tsp of jojoba (about 3%). Scalp only, partings at the crown, part line and hairline. Leave 2 to 4 hours or overnight. Weekly target, so a skipped night doesn't break the day on the Streak calendar.
+- Pumpkin seed oil or about 30 g pumpkin seeds daily (Cho 2014)
+- Hit protein target (auto-filled from the nutrition log)
+- 7+ hours sleep
+- Gentle wash and handling: daily washing is fine (Punyani 2021 found daily beat weekly on every scalp and hair measure). On the morning after an oil night, put shampoo on the scalp before fully wetting it, then a second round; lukewarm water; conditioner on the lengths only; pat dry and air dry.
+
+**Timeline**: a 52-week bar with checkpoints at week 0 (baseline photos and labs), 4 (expect a temporary rise in shedding), 12 (first photos, judge shedding only), 24 (main checkpoint, where both trials showed results; if clearly worse, see a dermatologist), and 52.
+
+**Weekly shed count**: once a week, same day and routine, count shed hairs from the sink, drain and towel (spread on white paper, count in tens) and log it with the routine and notes. Shows baseline, average of the last 3 counts, a chart with a 100-hair reference line and history. Counts usually rise for the first 4 to 8 weeks before settling.
+
+**Today's routine**: tap to tick habits. **Weekly adherence**: days done per habit per week (daily habits 6 of 7, oil 5 of 7). **Monthly check-in**: photos taken, crown and hairline ratings 1 to 5, shedding vs last month, notes. **Settings**: toggle habits, include or exclude the routine from the Streak calendar, stop the routine.
+
+---
+
 ## Plan tab
 
 - **The program**: cycle overview, one table per day with exercise, muscles, sets x reps and rest; your chosen alternative is shown with "swapped from ..." and focus exercises are marked. Exercise names link to form videos. "Rest time and recovery" explains the rest and frequency science.
@@ -232,6 +256,11 @@ Rest times: 3 min on heavy compounds (bench, squat pattern, hinge, overhead pres
 - Only act on flags once the 8 week change column has data.
 - Add a block for at most two groups. Leave it for 8 weeks, then re-check. Remove it when the group is no longer flagged.
 - Left/right gap: switch that exercise to its single-limb version and lead with the weaker side.
+
+**Hair routine**
+- Do not judge before week 12; do not decide before week 24.
+- Shed counts rising in the first 4 to 8 weeks is expected. Counts well above baseline for a month after that, or hair coming out in patches: see a doctor.
+- Scalp itching, flaking or bumps from the oil: drop to alternate nights or dilute more.
 
 **Cycle**
 - Missed a day: do nothing, the session waits.

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts'
 import { todayKey, addDays, fmtDate, diffDays, weekKey } from '../lib/calc'
 
 // Every habit here has at least one human trial behind it or corrects a
@@ -9,7 +10,7 @@ export const HAIR_HABITS = {
   pso: { label: 'Pumpkin seed oil or seeds with food', per: 7, how: '1 tsp cold-pressed pumpkin seed oil or a small handful (about 30 g) of pumpkin seeds. Cho 2014: 400 mg/day oral for 24 weeks, 40% more hair than placebo. Counts toward your fat and protein.' },
   protein: { label: 'Hit protein target', per: 7, how: 'Hair is keratin; under-eating protein in a deficit is a common cause of diffuse shedding. Your protein target already covers this; this just ties it to the routine.' },
   sleep: { label: '7 or more hours sleep', per: 7, how: 'Poor sleep and stress push follicles into the shedding phase. Tracked because it is the easiest lever to lose on a PhD schedule.' },
-  gentle: { label: 'Gentle wash and handling', per: 7, how: 'Washing daily is fine and likely better for the scalp: Punyani 2021 (Skin Appendage Disorders) found daily washing beat once-weekly on every scalp and hair measure in Asian participants, with no damage. What matters is how: a mild shampoo on the scalp only, two rounds on oil nights (first lifts the oil, second cleans), lukewarm water, pat dry instead of rubbing, wide comb on wet hair, no tight caps for hours, no heat styling. Hair you see in the drain was already in its shedding phase; washing releases it, it does not cause it.' },
+  gentle: { label: 'Gentle wash and handling', per: 7, how: 'Daily washing is fine and likely better for the scalp (Punyani 2021, Skin Appendage Disorders: daily beat once-weekly on every scalp and hair measure, no damage). Morning after an oil night: put a small amount of shampoo on the scalp BEFORE fully wetting it (shampoo grabs oil better undiluted), work it in with fingertips, rinse, then a second round on wet hair. Lukewarm water, fingertips not nails. Conditioner only on the lengths, a pea-sized amount for short hair, never on the scalp, rinse well. Pat dry with a towel, let it air dry, wide comb only. Non-oil days: a single shampoo round or just a rinse. Hair in the drain was already shedding; washing releases it, it does not cause it.' },
 }
 
 const CHECKPOINTS = [
@@ -28,6 +29,7 @@ export default function Hair({ state, update, showToast, targets }) {
       <Timeline hair={hair} />
       <Daily state={state} update={update} targets={targets} />
       <Adherence state={state} targets={targets} />
+      <Sheds state={state} update={update} showToast={showToast} />
       <Checkins state={state} update={update} showToast={showToast} />
       <Evidence />
       <Settings state={state} update={update} />
@@ -148,6 +150,68 @@ function Adherence({ state, targets }) {
         </table>
       </div>
       <p className="tiny faint" style={{ marginTop: 8 }}>Consistency matters more than any single ingredient: both trials ran for 6 months. The oil counts as done on 5 nights a week; everything else is daily. Missing the oil on a given day doesn't break the day on the Streak calendar.</p>
+    </section>
+  )
+}
+
+// ---------- weekly shed count ----------
+const SHED_CONTEXT = { wash_oil: 'Wash after oil night', wash: 'Plain wash', massage: 'Oil + massage only' }
+function Sheds({ state, update, showToast }) {
+  const hair = state.hair
+  const list = Object.entries(hair.sheds || {}).sort()
+  const last = list[list.length - 1]?.[0]
+  const due = !last || diffDays(last, todayKey()) >= 7
+  const [f, setF] = useState({ date: todayKey(), count: '', context: 'wash_oil', notes: '' })
+  const save = () => {
+    if (!(+f.count > 0)) return
+    update((s) => ({ ...s, hair: { ...s.hair, sheds: { ...(s.hair.sheds || {}), [f.date]: { count: +f.count, context: f.context, notes: f.notes } } } }))
+    setF({ ...f, count: '', notes: '' }); showToast('Shed count saved')
+  }
+  const data = list.map(([k, v]) => ({ date: fmtDate(k), count: v.count }))
+  const baseline = list.length ? list[0][1].count : null
+  const recent = list.slice(-3).map(([, v]) => v.count)
+  const recentAvg = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : null
+  return (
+    <section className="card">
+      <div className="card-head"><h2>Weekly shed count</h2><span className={'chip ' + (due ? 'accent' : 'teal')}>{due ? 'due' : `next around ${fmtDate(addDays(last, 7))}`}</span></div>
+      <p className="tiny faint">Once a week, same day and same routine (the wash after an oil night is easiest). Collect the hair from the sink, drain and towel, spread it on white paper and count in groups of 10. A single count means little; the trend over weeks is what you're watching.</p>
+      <div className="grid grid-3" style={{ marginTop: 12 }}>
+        <div className="field"><label>Date</label><input type="date" className="input" value={f.date} max={todayKey()} onChange={(e) => setF({ ...f, date: e.target.value })} /></div>
+        <div className="field"><label>Hairs counted</label><input className="input mono" type="number" inputMode="numeric" placeholder="e.g. 80" value={f.count} onChange={(e) => setF({ ...f, count: e.target.value })} /></div>
+        <div className="field"><label>Routine</label><select className="input" value={f.context} onChange={(e) => setF({ ...f, context: e.target.value })}>{Object.entries(SHED_CONTEXT).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+        <div className="field" style={{ gridColumn: '1 / -1' }}><label>Notes (sick, stressed, new product, mostly thin or thick hairs)</label><input className="input" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+      </div>
+      <div className="btn-row" style={{ marginTop: 12, justifyContent: 'flex-end' }}><button className="btn primary sm" disabled={!(+f.count > 0)} onClick={save}>Save count</button></div>
+      {list.length > 0 && (
+        <>
+          <div className="stat-row" style={{ marginTop: 14 }}>
+            <div><div className="eyebrow">Baseline</div><div className="stat">{baseline}</div></div>
+            <div><div className="eyebrow">Last 3 avg</div><div className={'stat ' + (baseline && recentAvg < baseline * 0.8 ? 'teal' : baseline && recentAvg > baseline * 1.3 ? 'rose' : '')}>{recentAvg}</div></div>
+            <div><div className="eyebrow">Counts</div><div className="stat">{list.length}</div></div>
+          </div>
+          {data.length > 1 && (
+            <div style={{ height: 180, marginTop: 10 }}>
+              <ResponsiveContainer>
+                <LineChart data={data} margin={{ top: 8, right: 8, left: -14, bottom: 0 }}>
+                  <CartesianGrid stroke="#262C38" vertical={false} />
+                  <XAxis dataKey="date" stroke="#7B8494" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#7B8494" fontSize={11} tickLine={false} axisLine={false} domain={[0, 'auto']} />
+                  <Tooltip contentStyle={{ background: '#1C212C', border: '1px solid #343B4A', borderRadius: 9, fontSize: 12 }} labelStyle={{ color: '#B8BFCC' }} itemStyle={{ color: '#fff' }} />
+                  <ReferenceLine y={100} stroke="#5FB3A1" strokeDasharray="4 4" label={{ value: '100', fill: '#5FB3A1', fontSize: 11, position: 'right' }} />
+                  <Line type="monotone" dataKey="count" stroke="#F2A93B" strokeWidth={2.5} dot={{ r: 4, fill: '#F2A93B', strokeWidth: 0 }} isAnimationActive={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          <div style={{ overflowX: 'auto', marginTop: 10 }}>
+            <table>
+              <thead><tr><th>Date</th><th className="num">Count</th><th>Routine</th><th>Notes</th></tr></thead>
+              <tbody>{[...list].reverse().slice(0, 8).map(([k, v]) => <tr key={k}><td>{fmtDate(k)}</td><td className="num">{v.count}</td><td className="small">{SHED_CONTEXT[v.context]}</td><td className="small muted">{v.notes}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </>
+      )}
+      <p className="tiny faint" style={{ marginTop: 10 }}>Losing 50 to 100 hairs a day is normal, and a wash or massage releases a day or more of them at once. Expect counts to rise for the first 4 to 8 weeks as loose hairs come out, then settle. See a doctor if counts stay well above your baseline for a month, or hair comes out in patches or handfuls.</p>
     </section>
   )
 }

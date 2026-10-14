@@ -103,6 +103,7 @@ export function mergeStates(a, b) {
     out.hair = { ...(older.hair || {}), ...(newer.hair || {}) }
     out.hair.log = { ...(older.hair?.log || {}), ...(newer.hair?.log || {}) }
     out.hair.checkins = { ...(older.hair?.checkins || {}), ...(newer.hair?.checkins || {}) }
+    out.hair.sheds = { ...(older.hair?.sheds || {}), ...(newer.hair?.sheds || {}) }
   }
   out.prefs = { ...(older.prefs || {}), ...(newer.prefs || {}) }
   out.prefs.defaultAlts = { ...(older.prefs?.defaultAlts || {}), ...(newer.prefs?.defaultAlts || {}) }
