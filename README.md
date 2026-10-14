@@ -123,6 +123,14 @@ Morning weight, calories eaten, protein eaten, with date navigation. Chips show 
 ### Weekly body fat check
 Neck, waist, hip. Shows the Navy-method estimate live and saves it. One entry per week; re-saving within the same week overwrites it. The table shows your history.
 
+### Goal timeline
+Three dates for reaching your goal body fat:
+- **Original target date**: what the targets predicted on the day of your first body fat measurement.
+- **Projected from weight trend**: a straight-line fit through your last 6 weekly average weights (weeks with at least 3 weigh-ins), extended to your goal weight. Shows weeks earlier or later than the original.
+- **Projected from body fat trend**: the same fit through your last 6 body fat measurements (needs 3 spanning 2+ weeks).
+
+The projections follow what you actually did, so a diet break or missed weeks push them later and they recover as the trend resumes. Trust the weight trend over the body fat one; the Navy estimate moves in steps of about a point.
+
 ### Weekly trend
 Weekly averages of weight, calories, protein, steps, and the body fat series, with the goal or target as a dashed line. Weekly averages smooth out daily water swings; this is the number to make decisions on.
 

@@ -189,6 +189,9 @@ function buildFixedSchedule(state, untilKey) {
 
 export const dayLabel = (slot) => DAYS[slot]?.label || slot
 
+// Hair habits done on a weekly target rather than daily (see Hair tab).
+export const HAIR_FLEX = ['rosemary']
+
 // ---------- aggregation ----------
 export function weeklyAverages(daily) {
   const weeks = {}
@@ -245,8 +248,11 @@ export function dayScore(state, dateKey, schedule) {
     if (enabled.length) {
       const log = hair.log?.[dateKey] || {}
       const proteinOk = targets && daily.protein ? +daily.protein >= targets.protein : null
-      const doneN = enabled.filter((k) => (k === 'protein' && proteinOk != null ? proteinOk : log[k])).length
-      checks.push({ key: 'hair', ok: doneN === enabled.length, empty: doneN === 0 })
+      // Habits with a weekly (not daily) target don't block a day from counting.
+      const daily = enabled.filter((k) => !HAIR_FLEX.includes(k))
+      const done = (k) => (k === 'protein' && proteinOk != null ? proteinOk : log[k])
+      const doneN = daily.filter(done).length
+      checks.push({ key: 'hair', ok: doneN === daily.length, empty: enabled.filter(done).length === 0 })
     }
   }
   const hits = checks.filter((c) => c.ok).length
@@ -357,4 +363,54 @@ export function analyzePhysique(state, groupsDef) {
   })
   const focus = Object.keys(score).sort((a, b) => score[b] - score[a]).slice(0, 2)
   return { readings, latest, rows, flags, focus, median, bones }
+}
+
+
+// ---------- goal timeline ----------
+// Least-squares slope of y against x.
+function slope(points) {
+  const n = points.length
+  if (n < 2) return null
+  const mx = points.reduce((a, p) => a + p.x, 0) / n
+  const my = points.reduce((a, p) => a + p.y, 0) / n
+  const sxx = points.reduce((a, p) => a + (p.x - mx) ** 2, 0)
+  if (!sxx) return null
+  return points.reduce((a, p) => a + (p.x - mx) * (p.y - my), 0) / sxx
+}
+
+// Original date: what the targets predicted on the day the first body-fat
+// measurement was saved. Projected dates: extrapolate the actual trend of
+// weekly average weight (last 6 logged weeks) and of measured body fat
+// (last 6 measurements) to the goal.
+export function goalTimeline(state, targets) {
+  if (!state.profile || !targets || targets.goalBf == null) return null
+  const ms = Object.keys(state.measurements || {}).filter((k) => state.measurements[k].bodyfat != null).sort()
+  const today = todayKey()
+  const out = { goalWeight: targets.goalWeight, goalBf: targets.goalBf }
+  if (ms.length) {
+    const t0 = computeTargetsAt(state, ms[0])
+    if (t0?.weeksToGoal != null) out.original = { from: ms[0], date: addDays(ms[0], t0.weeksToGoal * 7), rate: t0.rate * t0.lbm / (1 - t0.bfNow / 100) }
+  }
+  // Weight trend
+  const weeks = weeklyAverages(state.daily).filter((w) => w.weight != null && w.days >= 3).slice(-6)
+  if (weeks.length >= 3) {
+    const pts = weeks.map((w) => ({ x: diffDays(weeks[0].week, w.week) / 7, y: w.weight }))
+    const k = slope(pts)
+    const last = weeks[weeks.length - 1]
+    out.weight = { perWeek: k, weeks: weeks.length, from: weeks[0].week, latest: last.weight }
+    if (k != null && k < -0.05 && targets.goalWeight) {
+      const left = Math.max(0, last.weight - targets.goalWeight)
+      out.weight.date = addDays(addDays(last.week, 3), Math.round((left / -k) * 7))
+    }
+  }
+  // Body-fat trend
+  const bf = ms.slice(-6).map((k) => ({ k, bf: state.measurements[k].bodyfat }))
+  if (bf.length >= 3 && diffDays(bf[0].k, bf[bf.length - 1].k) >= 14) {
+    const k = slope(bf.map((m) => ({ x: diffDays(bf[0].k, m.k) / 7, y: m.bf })))
+    const last = bf[bf.length - 1]
+    out.bodyfat = { perWeek: k, from: bf[0].k, latest: last.bf }
+    if (k != null && k < -0.05) out.bodyfat.date = addDays(last.k, Math.round(((last.bf - targets.goalBf) / -k) * 7))
+  }
+  out.today = today
+  return out
 }

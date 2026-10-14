@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts'
-import { ACTIVITY, navyBodyFat, ftInToCm, todayKey, fmtDate, weeklyAverages, weekKey, addDays } from '../lib/calc'
+import { ACTIVITY, navyBodyFat, ftInToCm, todayKey, fmtDate, weeklyAverages, weekKey, addDays, goalTimeline, diffDays } from '../lib/calc'
 import Physique from '../components/Physique'
 
 const METRICS = {
@@ -17,6 +17,7 @@ export default function Nutrition({ state, update, targets, showToast }) {
   return (
     <>
       <Targets targets={targets} profile={state.profile} onEdit={() => setEditing(true)} />
+      <Timeline state={state} targets={targets} />
       <DailyLog state={state} update={update} targets={targets} />
       <Measurements state={state} update={update} showToast={showToast} />
       <Trends state={state} targets={targets} />
@@ -109,6 +110,42 @@ function Targets({ targets: t, profile, onEdit }) {
           <b>Goal weight</b> assumes lean mass stays constant: lean mass / (1 - goal body fat). As a beginner you may add muscle at the same time, so the scale can move slower than this while you still get leaner. Re-measure weekly and trust the tape and the weekly averages over any single day.
         </div>
       </details>
+    </section>
+  )
+}
+
+// ---------- goal timeline ----------
+function Timeline({ state, targets }) {
+  const g = useMemo(() => goalTimeline(state, targets), [state, targets])
+  if (!g) return null
+  const full = { month: 'short', day: 'numeric', year: 'numeric' }
+  const delta = (d) => {
+    if (!g.original || !d) return null
+    const n = diffDays(g.original.date, d)
+    if (Math.abs(n) < 4) return <span className="chip teal">on schedule</span>
+    return <span className={'chip ' + (n > 0 ? 'rose' : 'teal')}>{Math.abs(Math.round(n / 7))} wk {n > 0 ? 'later' : 'earlier'}</span>
+  }
+  const row = (label, date, sub, extra) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--line)', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div><div className="small">{label}</div><div className="tiny faint">{sub}</div></div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>{extra}<span className="mono" style={{ fontWeight: 600 }}>{date ? fmtDate(date, full) : '-'}</span></div>
+    </div>
+  )
+  return (
+    <section className="card">
+      <div className="card-head"><h2>Goal timeline</h2><span className="chip">{g.goalBf}% body fat, about {g.goalWeight?.toFixed(1)} kg</span></div>
+      {g.original && row('Original target date', g.original.date, `Planned on ${fmtDate(g.original.from)} at about ${g.original.rate.toFixed(2)} kg/week`)}
+      {g.weight
+        ? row('Projected from weight trend', g.weight.date,
+            g.weight.perWeek < -0.05 ? `Weekly averages over the last ${g.weight.weeks} logged weeks: ${g.weight.perWeek.toFixed(2)} kg/week` : `Weekly average is flat or rising (${g.weight.perWeek >= 0 ? '+' : ''}${g.weight.perWeek.toFixed(2)} kg/week), no projection`,
+            delta(g.weight.date))
+        : row('Projected from weight trend', null, 'Needs 3 weeks with at least 3 weigh-ins each')}
+      {g.bodyfat
+        ? row('Projected from body fat trend', g.bodyfat.date,
+            g.bodyfat.perWeek < -0.05 ? `Last measurements: ${g.bodyfat.perWeek.toFixed(2)} points/week` : 'Body fat estimate is flat, no projection',
+            delta(g.bodyfat.date))
+        : row('Projected from body fat trend', null, 'Needs 3 measurements spanning 2+ weeks')}
+      <p className="tiny faint" style={{ marginTop: 10 }}>The original date is what your targets predicted when you started. The projections ignore the plan and extrapolate what your logged weights and measurements are actually doing, so a diet break or a missed stretch pushes them later and a strong run pulls them earlier. The weight trend is the steadier of the two; the body fat estimate moves in jumps of about a point. Early weeks of training read slower on the scale because new muscle and water offset some fat loss.</p>
     </section>
   )
 }

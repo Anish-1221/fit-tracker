@@ -5,11 +5,11 @@ import { todayKey, addDays, fmtDate, diffDays, weekKey } from '../lib/calc'
 // known cause of shedding. Frequencies follow the trial protocols.
 export const HAIR_HABITS = {
   massage: { label: 'Scalp massage, 4 to 5 min', per: 7, how: 'Fingertips, firm circular pressure over crown and front, no nails. Koyama 2016: daily for 24 weeks increased hair thickness.' },
-  rosemary: { label: 'Rosemary oil on the scalp', per: 7, how: '3 to 5 drops rosemary essential oil in 1 tsp carrier (coconut, jojoba or almond), massaged into thinning areas in the evening, washed out in the morning. Panahi 2015: matched minoxidil 2% at 6 months. Patch test on the inner arm first.' },
+  rosemary: { label: 'Rosemary oil on the scalp', per: 5, freq: '5 nights a week', how: '3 to 5 drops rosemary essential oil in about 1 tsp of a light carrier (jojoba is closest to scalp sebum; coconut is fine; avoid olive oil, which feeds the yeast behind dandruff). Only part the hair and work it into the thinning areas, not the lengths. Leave it on at least 2 to 4 hours or overnight, then shampoo it out. Panahi 2015 matched minoxidil 2% at 6 months. Five nights a week keeps it consistent while giving the scalp two oil-free nights; patch test on the inner arm first, and drop to alternate nights if the scalp itches, flakes or gets bumpy.' },
   pso: { label: 'Pumpkin seed oil or seeds with food', per: 7, how: '1 tsp cold-pressed pumpkin seed oil or a small handful (about 30 g) of pumpkin seeds. Cho 2014: 400 mg/day oral for 24 weeks, 40% more hair than placebo. Counts toward your fat and protein.' },
   protein: { label: 'Hit protein target', per: 7, how: 'Hair is keratin; under-eating protein in a deficit is a common cause of diffuse shedding. Your protein target already covers this; this just ties it to the routine.' },
   sleep: { label: '7 or more hours sleep', per: 7, how: 'Poor sleep and stress push follicles into the shedding phase. Tracked because it is the easiest lever to lose on a PhD schedule.' },
-  gentle: { label: 'Gentle handling', per: 7, how: 'Lukewarm water, no rough towel drying, no tight caps for hours, wide comb, no heat styling. Prevents breakage that looks like thinning.' },
+  gentle: { label: 'Gentle wash and handling', per: 7, how: 'Washing daily is fine and likely better for the scalp: Punyani 2021 (Skin Appendage Disorders) found daily washing beat once-weekly on every scalp and hair measure in Asian participants, with no damage. What matters is how: a mild shampoo on the scalp only, two rounds on oil nights (first lifts the oil, second cleans), lukewarm water, pat dry instead of rubbing, wide comb on wet hair, no tight caps for hours, no heat styling. Hair you see in the drain was already in its shedding phase; washing releases it, it does not cause it.' },
 }
 
 const CHECKPOINTS = [
@@ -108,7 +108,7 @@ function Daily({ state, update, targets }) {
           return (
             <button key={k} className="note" style={{ display: 'flex', gap: 12, alignItems: 'center', textAlign: 'left', borderColor: checked ? 'rgba(95,179,161,.5)' : undefined, cursor: auto ? 'default' : 'pointer' }} onClick={() => !auto && toggle(k)}>
               <span className={'chip ' + (checked ? 'teal' : '')} style={{ width: 26, height: 26, padding: 0, justifyContent: 'center' }}>{checked ? '✓' : ''}</span>
-              <span style={{ flex: 1 }}><b>{h.label}</b>{auto && <span className="tiny faint"> from nutrition log</span>}</span>
+              <span style={{ flex: 1 }}><b>{h.label}</b>{auto && <span className="tiny faint"> from nutrition log</span>}{h.freq && <span className="tiny faint"> {h.freq}, doesn't block the day</span>}</span>
             </button>
           )
         })}
@@ -138,16 +138,16 @@ function Adherence({ state, targets }) {
   if (!weeks.length) return null
   return (
     <section className="card">
-      <div className="card-head"><h2>Weekly adherence</h2><span className="tiny faint">target 6 of 7</span></div>
+      <div className="card-head"><h2>Weekly adherence</h2><span className="tiny faint">daily habits 6 of 7, oil 5 of 7</span></div>
       <div style={{ overflowX: 'auto' }}>
         <table>
           <thead><tr><th>Week of</th>{enabled.map((k) => <th key={k} className="num">{HAIR_HABITS[k].label.split(',')[0].split(' ').slice(0, 2).join(' ')}</th>)}</tr></thead>
           <tbody>{weeks.map((w) => (
-            <tr key={w.week}><td>{fmtDate(w.week)}</td>{enabled.map((k) => <td key={k} className={'num ' + (w.hits[k] >= 6 ? 'teal' : w.hits[k] >= 4 ? '' : 'rose')}>{w.hits[k]}/{w.days}</td>)}</tr>
+            <tr key={w.week}><td>{fmtDate(w.week)}</td>{enabled.map((k) => <td key={k} className={'num ' + (() => { if (w.days < 3) return ''; const goal = Math.max(1, Math.round((HAIR_HABITS[k].per * w.days) / 7) - (HAIR_HABITS[k].per === 7 ? 1 : 0)); return w.hits[k] >= goal ? 'teal' : w.hits[k] >= goal * 0.6 ? '' : 'rose' })()}>{w.hits[k]}/{w.days}</td>)}</tr>
           ))}</tbody>
         </table>
       </div>
-      <p className="tiny faint" style={{ marginTop: 8 }}>Consistency matters more than any single ingredient: both trials ran 6 months of daily use. Fewer than 4 days a week is unlikely to show anything.</p>
+      <p className="tiny faint" style={{ marginTop: 8 }}>Consistency matters more than any single ingredient: both trials ran for 6 months. The oil counts as done on 5 nights a week; everything else is daily. Missing the oil on a given day doesn't break the day on the Streak calendar.</p>
     </section>
   )
 }
