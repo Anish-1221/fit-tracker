@@ -249,10 +249,10 @@ export function dayScore(state, dateKey, schedule) {
       const log = hair.log?.[dateKey] || {}
       const proteinOk = targets && daily.protein ? +daily.protein >= targets.protein : null
       // Habits with a weekly (not daily) target don't block a day from counting.
-      const daily = enabled.filter((k) => !HAIR_FLEX.includes(k))
-      const done = (k) => (k === 'protein' && proteinOk != null ? proteinOk : log[k])
-      const doneN = daily.filter(done).length
-      checks.push({ key: 'hair', ok: doneN === daily.length, empty: enabled.filter(done).length === 0 })
+      const dailyHabits = enabled.filter((k) => !HAIR_FLEX.includes(k))
+      const done = (k) => (k === 'protein' && proteinOk != null ? proteinOk : !!log[k])
+      const doneN = dailyHabits.filter(done).length
+      checks.push({ key: 'hair', ok: dailyHabits.length > 0 && doneN === dailyHabits.length, empty: enabled.filter(done).length === 0 })
     }
   }
   const hits = checks.filter((c) => c.ok).length
