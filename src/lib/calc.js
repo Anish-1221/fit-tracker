@@ -192,6 +192,26 @@ export const dayLabel = (slot) => DAYS[slot]?.label || slot
 // Hair habits done on a weekly target rather than daily (see Hair tab).
 export const HAIR_FLEX = ['rosemary']
 
+// The hair habits that were active on a given day. Changing the routine adds
+// a phase starting that day, so earlier days keep the habits they were
+// actually done under and are never rescored.
+export function hairHabitsAt(hair, dateKey) {
+  const phases = hair?.phases
+  if (!phases?.length) return hair?.habits || {}
+  let cur = null
+  for (const p of phases) if (p.from <= dateKey) cur = p
+  return (cur || phases[0]).habits || {}
+}
+
+// Change the current habit set, recording it as a phase from a date (today
+// by default). Phases starting on or after that date are replaced.
+export function setHairHabits(hair, habits, from = todayKey()) {
+  let phases = hair.phases?.length ? [...hair.phases] : [{ from: hair.startDate, habits: hair.habits || {} }]
+  const keep = phases.filter((p) => p.from < from)
+  phases = keep.length ? [...keep, { from, habits }] : [{ from: phases[0].from < from ? phases[0].from : from, habits }]
+  return { ...hair, habits, phases }
+}
+
 // ---------- aggregation ----------
 export function weeklyAverages(daily) {
   const weeks = {}
@@ -244,7 +264,8 @@ export function dayScore(state, dateKey, schedule) {
   }
   const hair = state.hair
   if (hair?.startDate && hair.inStreak && dateKey >= hair.startDate) {
-    const enabled = Object.keys(hair.habits || {}).filter((k) => hair.habits[k])
+    const habits = hairHabitsAt(hair, dateKey)
+    const enabled = Object.keys(habits).filter((k) => habits[k])
     if (enabled.length) {
       const log = hair.log?.[dateKey] || {}
       const proteinOk = targets && daily.protein ? +daily.protein >= targets.protein : null

@@ -12,7 +12,10 @@ const METRICS = {
 }
 
 export default function Nutrition({ state, update, targets, showToast }) {
-  const [editing, setEditing] = useState(!state.profile)
+  // Only the Edit button opens the form for an existing profile. Deriving the
+  // initial value from state.profile froze the form open when the tab was
+  // opened before cloud data arrived.
+  const [editing, setEditing] = useState(false)
   if (!state.profile || editing) return <ProfileForm state={state} update={update} onDone={() => setEditing(false)} />
   return (
     <>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { loadLocal, saveLocal, loadSettings, saveSettings, pullGist, pushGist, findOrCreateGist, mergeStates } from './lib/storage'
+import { loadLocal, saveLocal, loadSettings, saveSettings, pullGist, pushGist, findOrCreateGist, mergeStates, recoverFromHistory } from './lib/storage'
 import { buildSchedule, computeTargets, weeklyAverages } from './lib/calc'
 import Today from './tabs/Today'
 import Nutrition from './tabs/Nutrition'
@@ -57,7 +57,10 @@ export default function App() {
         const remote = await pullGist(settings.token, gistId)
         if (cancelled) return
         if (remote) {
-          const merged = mergeStates(stateRef.current, remote)
+          let merged = mergeStates(stateRef.current, remote)
+          const repaired = await recoverFromHistory(settings.token, gistId, merged).catch(() => null)
+          if (cancelled) return
+          if (repaired) { merged = repaired; showToast('Restored your profile from cloud history') }
           const changedLocal = JSON.stringify(merged) !== JSON.stringify(stateRef.current)
           const changedRemote = JSON.stringify(merged) !== JSON.stringify(remote)
           if (changedLocal) { skipNextPush.current = true; setState(merged); saveLocal(merged); showToast('Merged data from cloud') }

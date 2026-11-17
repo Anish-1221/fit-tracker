@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { DAYS, EXERCISES, CYCLE, FOCUS_LOOKUP, yt, restLabel } from '../data/program'
-import { exportJson, findOrCreateGist, pullGist, saveLocal, mergeStates } from '../lib/storage'
+import { exportJson, findOrCreateGist, pullGist, saveLocal, mergeStates, recoverFromHistory } from '../lib/storage'
 import { fmtDate, dayLabel } from '../lib/calc'
 
 export default function Plan({ state, update, settings, setSettings, showToast, sync }) {
@@ -80,7 +80,12 @@ function SyncCard({ settings, setSettings, showToast, sync, state, update }) {
     setBusy(true)
     try {
       const remote = await pullGist(settings.token, settings.gistId)
-      if (remote) { update((s) => mergeStates(s, remote)); showToast('Merged cloud data') }
+      if (remote) {
+        const merged = mergeStates(state, remote)
+        const repaired = await recoverFromHistory(settings.token, settings.gistId, merged).catch(() => null)
+        update(() => repaired || merged)
+        showToast(repaired ? 'Restored your profile from cloud history' : 'Merged cloud data')
+      }
     } catch (e) { showToast(e.message, true) }
     setBusy(false)
   }
@@ -120,7 +125,7 @@ function DataCard({ state, update, showToast }) {
   }
   const resetCycle = () => {
     if (!confirm('Reset the cycle start? Logged sessions are kept.')) return
-    update((s) => ({ ...s, cycle: { startDate: null, startIndex: 0, skipped: [] } }))
+    update((s) => ({ ...s, cycle: { startDate: null, startIndex: 0, skipped: [], resetAt: Date.now() } }))
   }
   const wipe = () => {
     if (!confirm('Delete everything on this device? Download a backup first if you want to keep it.')) return

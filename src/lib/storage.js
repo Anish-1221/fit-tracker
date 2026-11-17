@@ -98,6 +98,10 @@ export function mergeStates(a, b) {
   if (!b) return a
   const [newer, older] = a.updatedAt >= b.updatedAt ? [a, b] : [b, a]
   const out = { ...older, ...newer }
+  // A fresh device starts with no profile and no cycle. If anything bumps its
+  // updatedAt before the first pull, it must not blank out the real ones.
+  out.profile = newer.profile || older.profile || null
+  out.cycle = newer.cycle?.startDate || (newer.cycle?.resetAt || 0) > (older.cycle?.resetAt || 0) ? newer.cycle : (older.cycle?.startDate ? older.cycle : newer.cycle)
   COLLECTIONS.forEach((c) => { out[c] = { ...(older[c] || {}), ...(newer[c] || {}) } })
   if (older.hair || newer.hair) {
     out.hair = { ...(older.hair || {}), ...(newer.hair || {}) }
@@ -109,4 +113,33 @@ export function mergeStates(a, b) {
   out.prefs.defaultAlts = { ...(older.prefs?.defaultAlts || {}), ...(newer.prefs?.defaultAlts || {}) }
   out.updatedAt = Math.max(a.updatedAt || 0, b.updatedAt || 0)
   return out
+}
+
+// If the profile or cycle went missing (an older version of the merge could
+// lose them when a new device synced), find them in the Gist's revision
+// history and put them back. Returns the repaired state, or null if nothing
+// was missing or nothing could be found.
+export async function recoverFromHistory(token, gistId, state) {
+  const needProfile = !state.profile
+  const needCycle = !state.cycle?.startDate && !state.cycle?.resetAt
+  if (!needProfile && !needCycle) return null
+  const res = await api('/gists/' + gistId + '/commits?per_page=100', {}, token)
+  if (!res.ok) return null
+  const commits = await res.json()
+  let profile = null, cycle = null
+  for (const c of commits) {
+    if ((!needProfile || profile) && (!needCycle || cycle)) break
+    const r = await api('/gists/' + gistId + '/' + c.version, {}, token)
+    if (!r.ok) continue
+    const f = (await r.json()).files?.[GIST_FILE]
+    if (!f) continue
+    let content = f.content
+    if (f.truncated) content = await (await fetch(f.raw_url)).text()
+    let s
+    try { s = JSON.parse(content) } catch { continue }
+    if (needProfile && !profile && s.profile) profile = s.profile
+    if (needCycle && !cycle && s.cycle?.startDate) cycle = s.cycle
+  }
+  if (!profile && !cycle) return null
+  return { ...state, ...(profile ? { profile } : {}), ...(cycle ? { cycle } : {}), updatedAt: Date.now() }
 }

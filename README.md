@@ -31,7 +31,7 @@ First time on a device:
 1. Open the site. On a phone, add it to the home screen so it opens full screen.
 2. **Workout tab**: set the cycle start date and which session you start with. Do this once.
 3. **Nutrition tab**: fill in the profile (age, weight in kg, height in ft/in, activity, neck and waist in cm, goal body fat %). The site computes your targets.
-4. **Plan tab → Cloud sync** (optional but recommended if you use two devices): paste a GitHub personal access token with only the `gist` scope. Repeat on each device. Data merges automatically; the newer copy wins.
+4. **Plan tab → Cloud sync** (optional but recommended if you use two devices): paste a GitHub personal access token with only the `gist` scope. Repeat on each device. Data merges automatically, entry by entry.
 
 Daily routine:
 
@@ -167,23 +167,23 @@ Scoring: a day is **full** when every applicable target is hit, **partial** when
 
 ## Hair tab
 
-Optional. Built for pattern thinning at the crown and hairline using natural, vegetarian options with human trial evidence. It is a routine tracker, not a guaranteed treatment; "The honest baseline" card explains the limits and why a blood panel (ferritin, vitamin D, zinc, B12, TSH) and a dermatologist visit come first.
+Optional. Tracks a hair-loss routine: daily checklist, a timeline with checkpoints, weekly shed counts and monthly photo check-ins. It started as a natural routine and now supports a dermatologist-prescribed treatment; "The honest baseline" card explains what each part can and can't do.
 
-**Setup**: pick the habits you will do and a start date (the day you actually start the oil).
+**Setup**: pick the habits you will do and a start date.
 
-**Habits** (sources in the Evidence card):
-- Scalp massage, 4 to 5 min daily (Koyama 2016)
-- Rosemary oil on the scalp, **5 nights a week** (Panahi 2015 matched minoxidil 2% at 6 months). A pre-made blend like Mielle Rosemary Mint goes on as is, about 1 tsp (5 ml); pure rosemary essential oil must be diluted, 3 drops per tsp of jojoba (about 3%). Scalp only, partings at the crown, part line and hairline. Leave 2 to 4 hours or overnight. Weekly target, so a skipped night doesn't break the day on the Streak calendar.
-- Pumpkin seed oil or about 30 g pumpkin seeds daily (Cho 2014)
-- Hit protein target (auto-filled from the nutrition log)
-- 7+ hours sleep
-- Gentle wash and handling: daily washing is fine (Punyani 2021 found daily beat weekly on every scalp and hair measure). On the morning after an oil night, put shampoo on the scalp before fully wetting it, then a second round; lukewarm water; conditioner on the lengths only; pat dry and air dry.
+**Add a prescribed treatment** (card shown until a treatment is added): enter the oral medication and dose, the topical and daily amount, a start date and an optional follow-up date, and choose whether to retire scalp massage and rosemary oil. This adds three checklist items (oral morning dose, oral evening dose, topical) and switches the timeline to treatment milestones. Medication names and doses are stored in your data, not in the site code.
 
-**Timeline**: a 52-week bar with checkpoints at week 0 (baseline photos and labs), 4 (expect a temporary rise in shedding), 12 (first photos, judge shedding only), 24 (main checkpoint, where both trials showed results; if clearly worse, see a dermatologist), and 52.
+**Treatment card**: the regimen, the follow-up date with a countdown, and three expandable guides: how to apply the topical (dry scalp, parts every 1 to 2 cm across hairline, top and crown, about 1 mL, wash hands, at least 4 hours before washing), side effects to watch (including using weigh-ins to spot fluid retention) and storage and safety. The oral dose starts once a day; after the first week the card offers a button to add the evening dose if there were no side effects, and a button to step back down.
 
-**Weekly shed count**: once a week, same day and routine, count shed hairs from the sink, drain and towel (spread on white paper, count in tens) and log it with the routine and notes. Shows baseline, average of the last 3 counts, a chart with a 100-hair reference line and history. Counts usually rise for the first 4 to 8 weeks before settling.
+**Habits** (sources in the Evidence card): oral dose morning and evening, topical, pumpkin seed oil (optional, finish the bottle), protein target (auto-filled from the nutrition log), 7+ hours sleep, gentle wash and handling. Scalp massage and rosemary oil are retired but still read correctly in old logs.
 
-**Today's routine**: tap to tick habits. **Weekly adherence**: days done per habit per week (daily habits 6 of 7, oil 5 of 7). **Monthly check-in**: photos taken, crown and hairline ratings 1 to 5, shedding vs last month, notes. **Settings**: toggle habits, include or exclude the routine from the Streak calendar, stop the routine.
+**Habit history**: every change to the routine is saved as a phase starting that day. The Streak calendar and the adherence table judge each day by the habits active on that day, so changing the routine never rescores past days.
+
+**Timeline**: with a treatment, a 52-week bar from the treatment start with checkpoints at week 0 (start, once-daily oral), 1 (step up to twice daily), 2 (shedding window, expected through week 8), 8 (follow-up visit), 12 (photos and lab recheck), 24 (main checkpoint) and 52. Without a treatment, the natural-routine checkpoints are shown.
+
+**Weekly shed count**: once a week, same day and wash, count shed hairs from the sink, drain and towel (spread on white paper, count in tens) and log it with notes. Shows baseline, average of the last 3 counts, a chart with a 100-hair reference line and history. On minoxidil, counts usually rise in weeks 2 to 8 before settling.
+
+**Today's routine**: tap to tick habits. **Weekly adherence**: days done per habit per week, counted only over days that habit was part of the routine. **Monthly check-in**: photos taken, crown and hairline ratings 1 to 5, shedding vs last month, notes (side effects, new hairs, labs). **Settings**: toggle habits (applies from today), include or exclude the routine from the Streak calendar, stop the routine.
 
 ---
 
@@ -259,8 +259,8 @@ Rest times: 3 min on heavy compounds (bench, squat pattern, hinge, overhead pres
 
 **Hair routine**
 - Do not judge before week 12; do not decide before week 24.
-- Shed counts rising in the first 4 to 8 weeks is expected. Counts well above baseline for a month after that, or hair coming out in patches: see a doctor.
-- Scalp itching, flaking or bumps from the oil: drop to alternate nights or dilute more.
+- Shed counts rising in weeks 2 to 8 of minoxidil is expected and means it is working. Counts well above baseline past week 12, or hair coming out in patches: tell the clinic.
+- Headaches, dizziness, a pounding heartbeat, ankle swelling or a sudden weight jump: stay on the lower oral dose and call the clinic. Chest pain or shortness of breath: stop and get care.
 
 **Cycle**
 - Missed a day: do nothing, the session waits.
@@ -274,7 +274,7 @@ Rest times: 3 min on heavy compounds (bench, squat pattern, hinge, overhead pres
 ## Data, sync and backups
 
 - **Local**: everything is in the browser's localStorage under `fit-tracker:data`. Clearing site data deletes it, so keep backups.
-- **Cloud sync**: a private Gist named `Fit Tracker data` containing `fit-tracker-data.json`. The token is stored only in the browser (`fit-tracker:settings`) and never leaves your devices except to talk to api.github.com. On load the site pulls the Gist and keeps whichever copy has the newer `updatedAt`; every change pushes after 1.5 s.
+- **Cloud sync**: a private Gist named `Fit Tracker data` containing `fit-tracker-data.json`. The token is stored only in the browser (`fit-tracker:settings`) and never leaves your devices except to talk to api.github.com. On load the site pulls the Gist and merges it entry by entry with the local copy (newer `updatedAt` wins per day); every change pushes after 1.5 s, and saving a session pushes at once. A device with no profile or cycle can never blank out the real ones, and if the profile or cycle is ever missing after a sync, the site searches the Gist's revision history and restores the most recent copy automatically.
 - **Conflicts**: last write wins. Avoid editing the same day on two devices at once.
 - **Backup**: Plan tab → Download backup gives a JSON file. Restore replaces everything on the device and syncs up.
 - **Token**: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate → tick only `gist`. If it expires, generate a new one and reconnect; the Gist is found automatically.
