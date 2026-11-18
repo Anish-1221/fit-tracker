@@ -100,7 +100,7 @@ export default function Calendar({ state, schedule }) {
                 const d = state.daily?.[sel] || {}
                 const goal = c.key === 'hair' ? 'all habits' : c.key === 'calories' ? tg.calories + ' kcal' : c.key === 'protein' ? tg.protein + ' g' : c.key === 'steps' ? (selSched?.slot === 'abs' ? tg.absDaySteps : tg.steps).toLocaleString() : DAYS[selSched?.slot]?.label
                 const val = c.key === 'hair' ? (c.ok ? 'done' : c.empty ? '-' : 'partial') : c.key === 'workout' ? (selSched?.status === 'done' ? 'logged' : selSched?.status) : d[c.key] ? (+d[c.key]).toLocaleString() : '-'
-                return <tr key={c.key}><td>{LABELS[c.key]}</td><td className="num">{val}</td><td className="num faint">{goal}</td><td className="num"><span className={'chip ' + (c.ok ? 'teal' : c.empty ? '' : 'rose')}>{c.ok ? 'hit' : c.empty ? 'not logged' : 'missed'}</span></td></tr>
+                return <tr key={c.key}><td>{LABELS[c.key]}<div className="tiny faint">goal {goal}</div></td><td className="num">{val}</td><td className="num"><span className={'chip ' + (c.ok ? 'teal' : c.empty ? '' : 'rose')}>{c.ok ? 'hit' : c.empty ? 'not logged' : 'missed'}</span></td></tr>
               })}
             </tbody>
           </table>

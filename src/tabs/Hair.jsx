@@ -47,9 +47,10 @@ export default function Hair({ state, update, showToast, targets }) {
   if (!hair?.startDate) return <Start update={update} />
   return (
     <>
+      {!hair.treatment && <StartTreatment hair={hair} update={update} showToast={showToast} />}
       <Timeline hair={hair} />
       <Daily state={state} update={update} targets={targets} />
-      {hair.treatment ? <Treatment hair={hair} update={update} showToast={showToast} /> : <StartTreatment hair={hair} update={update} showToast={showToast} />}
+      {hair.treatment && <Treatment hair={hair} update={update} showToast={showToast} />}
       <Adherence state={state} targets={targets} />
       <Sheds state={state} update={update} showToast={showToast} />
       <Checkins state={state} update={update} showToast={showToast} />
@@ -96,7 +97,7 @@ function Timeline({ hair }) {
   const next = points[nextIdx]
   return (
     <section className="card">
-      <div className="card-head"><h2>{t ? 'Treatment week' : 'Week'} {week} of 52</h2><span className="chip">started {fmtDate(from)}</span></div>
+      <div className="card-head"><h2>{t ? 'Treatment week' : 'Week'} {week}</h2><span className="chip">since {fmtDate(from)}</span></div>
       <div style={{ display: 'flex', gap: 4, margin: '6px 0 14px' }}>
         {points.slice(0, -1).map((c, i) => {
           const span = points[i + 1].week - c.week
@@ -124,9 +125,9 @@ function Daily({ state, update, targets }) {
   return (
     <section className="card">
       <div className="card-head"><h2>Today's routine</h2>
-        <div className="btn-row" style={{ alignItems: 'center' }}>
+        <div className="datenav">
           <button className="btn sm ghost" onClick={() => setDateKey(addDays(dateKey, -1))}>Prev</button>
-          <input type="date" className="input" style={{ width: 'auto', minHeight: 34, padding: '4px 10px' }} value={dateKey} max={todayKey()} onChange={(e) => e.target.value && setDateKey(e.target.value)} />
+          <input type="date" className="input" value={dateKey} max={todayKey()} onChange={(e) => e.target.value && setDateKey(e.target.value)} />
           <button className="btn sm ghost" disabled={dateKey >= todayKey()} onClick={() => setDateKey(addDays(dateKey, 1))}>Next</button>
         </div>
       </div>
@@ -143,7 +144,7 @@ function Daily({ state, update, targets }) {
           )
         })}
       </div>
-      <p className="tiny faint" style={{ marginTop: 10 }}>{done} of {enabled.length} done. How to do each one is in the Evidence section below.</p>
+      <p className="tiny faint" style={{ marginTop: 10 }}>{done} of {enabled.length} done.{hair.treatment ? ' Application steps and side effects are on the Treatment card.' : ''}</p>
     </section>
   )
 }
@@ -164,23 +165,24 @@ function TreatmentFields({ f, setF }) {
 }
 
 function StartTreatment({ hair, update, showToast }) {
-  const [f, setF] = useState({ ...TREATMENT_DEFAULTS, start: todayKey(), followUp: '', retire: true })
+  const [f, setF] = useState({ ...TREATMENT_DEFAULTS, start: todayKey(), followUp: '', retire: true, pso: !!hair.habits?.pso })
   const go = () => {
-    const habits = { ...(hair.habits || {}), oral_am: true, oral_pm: false, topical: true }
+    const habits = { ...(hair.habits || {}), oral_am: true, oral_pm: false, topical: true, pso: f.pso }
     if (f.retire) { habits.massage = false; habits.rosemary = false }
-    const { retire, ...t } = f
+    const { retire, pso, ...t } = f
     update((s) => ({ ...s, hair: { ...setHairHabits(s.hair, habits, f.start), treatment: t } }))
     showToast('Treatment plan added')
   }
   return (
     <section className="card">
-      <div className="card-head"><h2>Add a prescribed treatment</h2></div>
-      <p className="muted small">Adds the oral doses and the topical to your daily checklist and switches the timeline to treatment milestones. Days before the start date keep the habits you were doing then, so past streaks don't change.</p>
+      <div className="card-head"><h2>Start your treatment plan</h2><span className="chip accent">to do</span></div>
+      <p className="muted small">Your checklist still shows the old natural routine until you tap Start treatment below. This replaces it with your oral doses and the topical, and switches the timeline to treatment milestones. Days before the start date keep the habits you were doing then, so past streaks don't change.</p>
       <TreatmentFields f={f} setF={setF} />
       <div className="grid grid-2" style={{ marginTop: 4 }}>
         <div className="field"><label>Start date</label><input type="date" className="input" value={f.start} max={todayKey()} onChange={(e) => setF({ ...f, start: e.target.value })} /></div>
       </div>
-      <label className="small" style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', marginTop: 8 }}><input type="checkbox" checked={f.retire} onChange={(e) => setF({ ...f, retire: e.target.checked })} />Retire scalp massage and rosemary oil</label>
+      <label className="small" style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', marginTop: 8 }}><input type="checkbox" checked={f.retire} onChange={(e) => setF({ ...f, retire: e.target.checked })} />Remove scalp massage and rosemary oil</label>
+      <label className="small" style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', marginTop: 8 }}><input type="checkbox" checked={f.pso} onChange={(e) => setF({ ...f, pso: e.target.checked })} />Keep pumpkin seed oil on the checklist (untick in Routine settings when the bottle runs out)</label>
       <p className="tiny faint" style={{ marginTop: 6 }}>Starts with the oral dose once a day. The card will offer the evening dose after the first week.</p>
       <div className="btn-row" style={{ marginTop: 12, justifyContent: 'flex-end' }}><button className="btn primary" onClick={go}>Start treatment</button></div>
     </section>
@@ -206,13 +208,11 @@ function Treatment({ hair, update, showToast }) {
           <div className="btn-row" style={{ justifyContent: 'flex-end' }}><button className="btn primary sm" onClick={save}>Save</button></div>
         </>
       ) : (
-        <table>
-          <tbody>
-            <tr><td><b>{t.oralName}</b><div className="tiny faint">{t.oralDose}</div></td><td className="small">{twice ? 'Twice a day, about 12 hours apart' : 'Once a day (first week)'}</td></tr>
-            <tr><td><b>{t.topicalName}</b><div className="tiny faint">{t.topicalDose}</div></td><td className="small">Once a day on a dry scalp: hairline, top, crown</td></tr>
-            <tr><td><b>Follow-up</b></td><td className="small">{t.followUp ? `${fmtDate(t.followUp)}${daysToFollowUp >= 0 ? `, in ${daysToFollowUp} days` : ''}` : 'Not set (Edit to add)'}</td></tr>
-          </tbody>
-        </table>
+        <div>
+          <div className="kv"><span className="k">{t.oralName}</span><span className="v">{t.oralDose}, {twice ? 'twice a day, about 12 hours apart' : 'once a day for the first week'}</span></div>
+          <div className="kv"><span className="k">{t.topicalName}</span><span className="v">{t.topicalDose}, once a day on a dry scalp: hairline, top, crown</span></div>
+          <div className="kv"><span className="k">Follow-up visit</span><span className="v">{t.followUp ? `${fmtDate(t.followUp)}${daysToFollowUp >= 0 ? `, in ${daysToFollowUp} days` : ''}` : 'Not set. Tap Edit to add the date.'}</span></div>
+        </div>
       )}
       {stepUpDue && (
         <div className="note" style={{ marginTop: 12, borderColor: 'rgba(242,169,59,.5)' }}>
@@ -272,7 +272,7 @@ function Adherence({ state, targets }) {
       })
       d = addDays(d, 1)
     }
-    return Object.values(out).sort((a, b) => (a.week < b.week ? 1 : -1)).slice(0, 8)
+    return Object.values(out).sort((a, b) => (a.week < b.week ? 1 : -1)).slice(0, 4)
   }, [hair, state.daily, targets])
   if (!weeks.length) return null
   const cols = Object.keys(HAIR_HABITS).filter((k) => weeks.some((w) => w.active[k]))
@@ -285,18 +285,16 @@ function Adherence({ state, targets }) {
   return (
     <section className="card">
       <div className="card-head"><h2>Weekly adherence</h2><span className="tiny faint">goal 6 of 7 days</span></div>
-      <div style={{ overflowX: 'auto' }}>
-        <table>
-          <thead><tr><th>Week of</th>{cols.map((k) => <th key={k} className="num">{HAIR_HABITS[k].short}</th>)}</tr></thead>
-          <tbody>{weeks.map((w) => (
-            <tr key={w.week}><td>{fmtDate(w.week)}</td>{cols.map((k) => {
-              const days = w.active[k] || 0, hits = w.hits[k] || 0
-              return <td key={k} className={'num ' + (days ? cls(k, hits, days) : 'faint')}>{days ? `${hits}/${days}` : '-'}</td>
-            })}</tr>
-          ))}</tbody>
-        </table>
-      </div>
-      <p className="tiny faint" style={{ marginTop: 8 }}>Each habit is counted only on days it was part of the routine, so retired and newly added habits don't skew a week. Missing doses is the main reason minoxidil fails; the oral and topical columns are the ones that matter.</p>
+      <table className="compact">
+        <thead><tr><th>Week of</th>{weeks.map((w, i) => <th key={w.week} className="num">{i === 0 ? 'This' : fmtDate(w.week, { month: 'numeric', day: 'numeric' })}</th>)}</tr></thead>
+        <tbody>{cols.map((k) => (
+          <tr key={k}><td className="small">{HAIR_HABITS[k].short}</td>{weeks.map((w) => {
+            const days = w.active[k] || 0, hits = w.hits[k] || 0
+            return <td key={w.week} className={'num ' + (days ? cls(k, hits, days) : 'faint')}>{days ? `${hits}/${days}` : '-'}</td>
+          })}</tr>
+        ))}</tbody>
+      </table>
+      <p className="tiny faint" style={{ marginTop: 8 }}>Days done out of days the habit was part of the routine, last 4 weeks. Missing doses is the main reason minoxidil fails, so the dose and topical rows are the ones that matter.</p>
     </section>
   )
 }

@@ -164,9 +164,9 @@ function DailyLog({ state, update, targets }) {
   return (
     <section className="card">
       <div className="card-head"><h2>Daily log</h2>
-        <div className="btn-row" style={{ alignItems: 'center' }}>
+        <div className="datenav">
           <button className="btn sm ghost" onClick={() => setDateKey(addDays(dateKey, -1))}>Prev</button>
-          <input type="date" className="input" style={{ width: 'auto', minHeight: 34, padding: '4px 10px' }} value={dateKey} max={todayKey()} onChange={(e) => e.target.value && setDateKey(e.target.value)} />
+          <input type="date" className="input" value={dateKey} max={todayKey()} onChange={(e) => e.target.value && setDateKey(e.target.value)} />
           <button className="btn sm ghost" disabled={dateKey >= todayKey()} onClick={() => setDateKey(addDays(dateKey, 1))}>Next</button>
         </div>
       </div>

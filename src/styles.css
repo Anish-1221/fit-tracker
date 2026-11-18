@@ -61,7 +61,10 @@ input, select, textarea { font: inherit; color: var(--text); }
 /* ---------- cards ---------- */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
 .card + .card { margin-top: 14px; }
-.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.datenav { display: flex; gap: 8px; align-items: center; }
+.datenav .input { width: auto; min-height: 34px; padding: 4px 10px; }
+@media (max-width: 480px) { .datenav { width: 100%; } .datenav .input { flex: 1; min-width: 0; } }
 .eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
 .stat { font-family: var(--font-mono); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
 .stat small { font-size: 13px; color: var(--text-3); font-family: var(--font-body); font-weight: 500; margin-left: 4px; }
@@ -99,7 +102,7 @@ textarea.input { resize: vertical; min-height: 64px; }
 .seg button.active.warn { background: var(--rose-dim); color: var(--rose); }
 .seg button.active.good { background: var(--teal-dim); color: var(--teal); }
 
-.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); }
+.chip { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); }
 .chip.accent { background: var(--accent-dim); color: var(--accent-2); border-color: transparent; }
 .chip.teal { background: var(--teal-dim); color: var(--teal); border-color: transparent; }
 .chip.rose { background: var(--rose-dim); color: var(--rose); border-color: transparent; }
@@ -169,3 +172,10 @@ details > summary::-webkit-details-marker { display: none; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* stacked label/value rows that read well on a phone */
+.kv { display: grid; gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.kv:last-child { border-bottom: 0; }
+.kv .k { font-weight: 600; }
+.kv .v { color: var(--text-2); font-size: 13px; }
+table.compact th, table.compact td { padding: 7px 5px; }
