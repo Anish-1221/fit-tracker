@@ -7,13 +7,30 @@ const COLORS = ['#F2A93B', '#5FB3A1', '#E06C75', '#8FA3FF', '#C9A0DC', '#FFC46B'
 
 export default function Physique({ state, update, showToast }) {
   const enabled = !!state.profile?.physique
+  if (!enabled && state.profile?.physiquePaused) return <Paused update={update} />
   if (!enabled) return <Intro state={state} update={update} />
+  const pause = () => {
+    if (!confirm('Pause muscle measurements? Your past measurements are kept, and any active focus blocks are removed.')) return
+    update((s) => ({ ...s, profile: { ...s.profile, physique: false, physiquePaused: true }, prefs: { ...s.prefs, focus: {} } }))
+    showToast('Muscle measurements paused')
+  }
   return (
     <>
       <Entry state={state} update={update} showToast={showToast} />
       <Analysis state={state} update={update} showToast={showToast} />
       <History state={state} />
+      <div className="btn-row" style={{ justifyContent: 'flex-end', marginTop: -6, marginBottom: 14 }}><button className="btn sm ghost" onClick={pause}>Pause muscle measurements</button></div>
     </>
+  )
+}
+
+function Paused({ update }) {
+  return (
+    <section className="card">
+      <div className="card-head"><h2>Muscle measurements</h2><span className="chip">paused</span></div>
+      <p className="muted small">Paused. Strength progress in your workout log, monthly photos and the waist measurement above track the same thing with less effort. Past measurements are kept.</p>
+      <div className="btn-row" style={{ marginTop: 12, justifyContent: 'flex-end' }}><button className="btn sm ghost" onClick={() => update((s) => ({ ...s, profile: { ...s.profile, physique: true, physiquePaused: false } }))}>Resume</button></div>
+    </section>
   )
 }
 
