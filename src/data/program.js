@@ -1,5 +1,7 @@
 // Program: Dr. Swole low-volume upper/lower, dumbbell and machine version,
-// plus one short abs + cardio day. Seven-slot cycle.
+// four lifting days a week. Seven-slot cycle: U1, L1, rest, U2, L2, rest, rest.
+// (An abs + cardio day used to sit in slot 6; it was removed in Nov 2026 and
+// its exercises stay defined so old sessions still display.)
 //
 // Rest intervals follow Schoenfeld et al. 2016 (J Strength Cond Res 30:1805):
 // 3 min rest beat 1 min for both strength and hypertrophy, and the 2024
@@ -402,7 +404,7 @@ export const DAYS = {
 // Seven-slot cycle. Upper and lower alternate so no muscle is hit on back-to-back
 // days; the mid-week rest gives 72 h before the second upper session and the
 // weekend rest gives 72 h before the cycle restarts.
-export const CYCLE = ['upper1', 'lower1', 'rest', 'upper2', 'lower2', 'abs', 'rest']
+export const CYCLE = ['upper1', 'lower1', 'rest', 'upper2', 'lower2', 'rest', 'rest']
 
 export const CARDIO_TYPES = ['Walk', 'Incline walk', 'Run', 'Cycling', 'Swimming', 'Badminton', 'Table tennis', 'Other']
 

@@ -242,7 +242,7 @@ export default function Today({ state, update, schedule, targets, showToast, flu
           <div className="card-head"><h2>Recording</h2>{day && <span className="chip">{day.label} scheduled</span>}</div>
           <select className="input" value={effSlot} onChange={(e) => setPick(e.target.value)}>
             {slot === 'rest' && <option value="">Rest day, nothing to log</option>}
-            {['upper1', 'lower1', 'upper2', 'lower2', 'abs'].map((k) => <option key={k} value={k}>{DAYS[k].label}{k === slot ? ' (scheduled)' : ''}</option>)}
+            {['upper1', 'lower1', 'upper2', 'lower2'].map((k) => <option key={k} value={k}>{DAYS[k].label}{k === slot ? ' (scheduled)' : ''}</option>)}
           </select>
           {effSlot && slot !== effSlot && <p className="tiny faint" style={{ marginTop: 8 }}>Recording {DAYS[effSlot].label} today counts it as today's session and the cycle continues from the next slot.</p>}
         </section>
@@ -366,7 +366,7 @@ function StartCycle({ update }) {
     <section className="card">
       <div className="eyebrow">Set up your cycle</div>
       <h1 style={{ margin: '6px 0 10px' }}>When does the cycle start?</h1>
-      <p className="muted small">The program repeats in a seven-day loop: Upper 1, Lower 1, rest, Upper 2, Lower 2, abs and cardio, rest. Pick the first day and which session you start with. After this the site picks each day for you; if you miss a session, it waits for you and the rest days shift.</p>
+      <p className="muted small">The program repeats in a seven-day loop: Upper 1, Lower 1, rest, Upper 2, Lower 2, rest, rest. Pick the first day and which session you start with. After this the site picks each day for you; if you miss a session, it waits for you and the rest days shift.</p>
       <div className="grid grid-2" style={{ marginTop: 16 }}>
         <div className="field"><label>First day</label><input type="date" className="input" value={start} onChange={(e) => setStart(e.target.value)} /></div>
         <div className="field"><label>Start with</label>

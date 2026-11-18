@@ -61,7 +61,7 @@ Everything saves as you type. The dot in the top right shows sync state: grey me
 ## Workout tab
 
 ### Cycle setup
-The program runs in a fixed seven-day loop: Upper 1, Lower 1, Rest, Upper 2, Lower 2, Abs + cardio, Rest. You pick the start date and the first session once. After that the site decides what today is.
+The program runs in a seven-day loop of four lifting days: Upper 1, Lower 1, Rest, Upper 2, Lower 2, Rest, Rest. You pick the start date and the first session once. After that the site decides what today is.
 
 Rules of the cycle:
 - Rest days are consumed by the calendar.
@@ -70,7 +70,7 @@ Rules of the cycle:
 - "Skip session" moves the cycle forward without logging anything. "Undo skip" reverses it.
 - Logging a session on a rest day counts as an extra session and also moves the cycle forward.
 - "Reset cycle start" on the Plan tab lets you re-anchor the loop; logged sessions are kept.
-- **Cycle modes** (Plan tab → Your data): "Cycle waits and shifts" (default) pauses on a missed session and slides everything. "Fixed weekly calendar" pins each weekday's session permanently: a missed session stays missed, nothing slides, and the Recording picker on the Workout tab lets you log any session on any day (for example, a missed upper on abs day).
+- **Cycle modes** (Plan tab → Your data): "Cycle waits and shifts" (default) pauses on a missed session and slides everything. "Fixed weekly calendar" pins each weekday's session permanently: a missed session stays missed, nothing slides, and the Recording picker on the Workout tab lets you log any session on any day (for example, a missed upper on a rest day).
 
 ### The cycle dial
 The ring with seven segments shows where you are in the loop. Teal segments are done, amber is today, thin grey segments are rest days. Below it, "Next:" previews the coming week assuming you train on schedule.
@@ -79,8 +79,7 @@ The ring with seven segments shows where you are in the loop. Teal segments are 
 Prev day / Next day / Today, or pick a date. You can log past sessions; the cycle recalculates. Future dates are not selectable.
 
 ### Activity card
-- **Steps**: enter the day's step count. The chip shows today's step goal (higher on abs day).
-- **Cardio** (abs day only): add one or more entries with type (walk, incline walk, run, cycling, swimming, badminton, table tennis, other) and minutes. Target is 20 to 30 minutes easy cardio on that day.
+- **Steps**: enter the day's step count. The chip shows today's step goal.
 
 ### Session card
 One block per exercise:
@@ -115,7 +114,7 @@ Shows latest value, change vs previous session, session count and a line chart.
 Sex, age, weight (kg), height (ft, in), activity outside the gym, neck, waist and hip (cm), optional body fat override, goal body fat %. Saving computes targets and seeds the first weekly measurement. Edit any time with "Edit profile".
 
 ### Daily targets card
-Calories, protein, carbs, fat, steps (normal day / abs day), current body fat, goal, goal weight, loss pace, estimated weeks to goal. "How these are calculated" explains every number with the source study.
+Calories, protein, carbs, fat, steps, current body fat, goal, goal weight, loss pace, estimated weeks to goal. "How these are calculated" explains every number with the source study.
 
 Targets are live: they recompute from your **latest weekly average weight** and your **latest saved body fat**. You do not need to re-enter your weight in the profile.
 
@@ -197,7 +196,7 @@ Optional. Tracks a hair-loss routine: daily checklist, a timeline with checkpoin
 
 ## The program
 
-Dr. Swole's low-volume upper/lower split adapted for a gym with dumbbells, machines and cables but no barbell or plates, plus one abs and cardio day.
+Dr. Swole's low-volume upper/lower split adapted for a gym with dumbbells, machines and cables but no barbell or plates, four lifting days a week. Core work sits on the leg days.
 
 **Upper 1**: flat dumbbell bench 3x5-8, seated dumbbell overhead press 2x6-10, chest-supported row 3x6-10, lat pulldown 2x10-15, dumbbell curl 3x8-12, lying dumbbell skullcrusher 3x8-12, dumbbell upright row 4x8-12.
 
@@ -207,7 +206,7 @@ Dr. Swole's low-volume upper/lower split adapted for a gym with dumbbells, machi
 
 **Lower 2**: dumbbell deadlift 2x5-8, Bulgarian split squat 3x6-10, leg extension 3x10-15, leg curl 3x10-15, machine calf raise 3x10-15, weighted crunch 3x10-15.
 
-**Abs + cardio**: plank 3x30-60 s, dead bug 3x8-12 per side, side plank 3x20-45 s per side, cable crunch 3x12-15, then 20 to 30 minutes easy cardio and a step goal 3,000 higher than usual.
+**Abs**: no separate day since Nov 2026. Lower 1 ends with captain's chair leg raises and Lower 2 with weighted crunches. Older logs of the former abs + cardio day (plank, dead bug, side plank, crunch) still show in history.
 
 Rest times: 3 min on heavy compounds (bench, squat pattern, hinge, overhead press, chin-up), 2 min on lighter compounds, 90 s on isolation work, 60 s on abs.
 
@@ -216,7 +215,7 @@ Rest times: 3 min on heavy compounds (bench, squat pattern, hinge, overhead pres
 ## The science behind the numbers
 
 - **Rest between sets**: Schoenfeld et al. 2016, J Strength Cond Res. 3 minute rests produced more strength and size than 1 minute with matched sets. A 2024 meta-analysis confirmed a benefit for rests over 60 s.
-- **Frequency and spacing**: Schoenfeld 2016 meta-analysis, twice a week per muscle beats once; Grgic 2018, 48 to 72 h between sessions for the same muscle. The seven-day loop gives every muscle two hits with 72 h gaps and two full rest days.
+- **Frequency and spacing**: Schoenfeld 2016 meta-analysis, twice a week per muscle beats once; Grgic 2018, 48 to 72 h between sessions for the same muscle. The seven-day loop gives every muscle two hits with 72 h gaps and three full rest days.
 - **Resting energy**: Mifflin-St Jeor equation, the most accurate common formula in validation studies.
 - **Body fat**: US Navy circumference method (Hodgdon and Beckett). Typical error is 3 to 4 points versus DXA, but it is consistent week to week when measured the same way, which is what matters for trend.
 - **Loss rate**: Helms, Aragon and Fitschen 2014, JISSN. 0.5 to 1% of bodyweight per week preserves muscle. The site picks 0.5% near goal up to 0.9% far from it, caps the deficit at 25% of maintenance, and never drops calories below BMR.

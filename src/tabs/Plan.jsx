@@ -19,7 +19,7 @@ function ProgramCard({ state }) {
     <section className="card">
       <div className="eyebrow">The program</div>
       <h2 style={{ margin: '6px 0 8px' }}>Seven-day cycle</h2>
-      <p className="muted small">Dr. Swole's low-volume upper/lower split, run with dumbbells and machines, plus one short abs and cardio day. Each muscle is trained twice per cycle with 48 to 72 hours between sessions, which is the spacing the frequency research supports (Schoenfeld 2016, Grgic 2018), and two full rest days.</p>
+      <p className="muted small">Dr. Swole's low-volume upper/lower split, run with dumbbells and machines: four lifting days a week. Each muscle is trained twice per cycle with 48 to 72 hours between sessions, which is the spacing the frequency research supports (Schoenfeld 2016, Grgic 2018), with three full rest days. Abs are trained on the leg days (leg raises on Lower 1, weighted crunches on Lower 2).</p>
       <div className="btn-row" style={{ marginTop: 14 }}>
         {CYCLE.map((c, i) => <span key={i} className={'chip ' + (c === 'rest' ? '' : c === 'abs' ? 'teal' : 'accent')}>{i + 1}. {DAYS[c].label}</span>)}
       </div>
